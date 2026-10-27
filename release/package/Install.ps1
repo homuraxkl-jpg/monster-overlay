@@ -24,7 +24,7 @@ $backup=Join-Path $GameRoot 'WhaleCompanion-backup\P11.5-RC1'
 $state=Join-Path $backup 'state.json'
 $rows=@();if(Test-Path -LiteralPath $state){$rows=Get-Content -LiteralPath $state -Raw -Encoding UTF8 | ConvertFrom-Json}
 function ValidateTarget([string]$relative){
- $allowed=$relative.StartsWith('nativePC/plugins/CSharp/WhaleCompanion/',[StringComparison]::OrdinalIgnoreCase) -or $relative.StartsWith('nativePC/otomo/ot000/mod/otomo000/',[StringComparison]::OrdinalIgnoreCase) -or $relative -in @('nativePC/otomo/equip/ot001/body/mod/ot_body001.mod3','nativePC/otomo/equip/ot001/helm/mod/ot_helm001.mod3','nativePC/common/text/ot_auto_chS.gmd','nativePC/common/text/ot_auto_chT.gmd','nativePC/common/text/ot_auto_eng.gmd')
+ $allowed=$relative.StartsWith('nativePC/otomo/accessory/ot_acc000/mod/',[StringComparison]::OrdinalIgnoreCase) -or $relative.StartsWith('nativePC/plugins/CSharp/WhaleCompanion/',[StringComparison]::OrdinalIgnoreCase) -or $relative.StartsWith('nativePC/otomo/ot000/mod/otomo000/',[StringComparison]::OrdinalIgnoreCase) -or $relative -in @('nativePC/otomo/equip/ot001/body/mod/ot_body001.mod3','nativePC/otomo/equip/ot001/helm/mod/ot_helm001.mod3','nativePC/common/text/ot_auto_chS.gmd','nativePC/common/text/ot_auto_chT.gmd','nativePC/common/text/ot_auto_eng.gmd')
  if(!$allowed){throw 'Unexpected install target'};return Safe $GameRoot $relative
 }
 if($Uninstall){

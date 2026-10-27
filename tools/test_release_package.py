@@ -1,6 +1,9 @@
 from pathlib import Path
 import subprocess,json,hashlib,tempfile,shutil,os
 ROOT=Path(__file__).resolve().parents[1];PKG=ROOT/'dist/WhaleCompanion-P11.5-RC1';P='nativePC/plugins/CSharp/WhaleCompanion/'
+manifest=json.loads((PKG/'package-manifest.json').read_text(encoding='utf-8'))
+assert len([f for f in manifest['Files'] if f['Target'].startswith('nativePC/otomo/accessory/ot_acc000/mod/')])==8,'Rice replacement incomplete'
+assert (PKG/'nativePC/otomo/ot000/mod/otomo000/otomo000.mod3').stat().st_size==13103784,'Expected approved replacement model'
 def ps(game,*args,ok=True):
     script="function Get-CimInstance { @() }; & '"+str(PKG/'Install.ps1')+"' -GameRoot '"+str(game)+"' "+' '.join(args)
     result=subprocess.run(['powershell','-NoProfile','-ExecutionPolicy','Bypass','-Command',script],capture_output=True,text=True,encoding='utf-8',errors='replace')

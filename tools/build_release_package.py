@@ -43,6 +43,9 @@ def build():
     add('assets/prototype/hide/otomo/ot000/mod/otomo000/otomo000_eyelens.mod3',model+'otomo000_eyelens.mod3')
     for part in ['body','helm']:add(f'assets/prototype/hide/otomo/equip/ot001/{part}/mod/ot_{part}001.mod3',f'nativePC/otomo/equip/ot001/{part}/mod/ot_{part}001.mod3')
     for name in ['image_0','image_1','image_2','image_3','image_5','image_6','black','flat_normal','flat_rmt']:add('assets/prototype/textures/'+name+'.tex',model+'whale_'+name+'.tex')
+    rice='nativePC/otomo/accessory/ot_acc000/mod/'
+    add('assets/prototype/rice-v2/otomo/accessory/ot_acc000/mod/ot_acc000.mod3',rice+'ot_acc000.mod3')
+    for name in ['ot_acc000.mrl3','whale_rice_black.tex','whale_rice_normal.tex','whale_rice_pot_color.tex','whale_rice_pot_rmt.tex','whale_rice_rice_rmt.tex','whale_rice_white.tex']:add('assets/prototype/rice-v1/otomo/accessory/ot_acc000/mod/'+name,rice+name)
     tints={}
     for name in ['original','soft-rosy','rosy']:
         path='optional/face-tint/'+name+'.mrl3';data=(ROOT/'assets/prototype/release-appearance'/f'{name}.mrl3').read_bytes();put(path,data);tints[name]=dict(Source=path,Hash=sha(data))
