@@ -5,7 +5,7 @@ using SharpPluginLoader.Core.Memory;
 namespace WhaleCompanion;
 
 // Query ABI/signature: Mi1ice/MHWI-VisualControllerExtended (MIT).
-// Only our reserved pot 55000 and face 56000..56040 groups are overridden. All other queries forward unchanged.
+// Only approved model groups: pot 55000, face 56000..56040 and optional outline 57000/57001/57010..57050. All others forward unchanged.
 public sealed class FaceMeshExecutor : IDisposable
 {
     public const string ModelHash = "4AF7D138E38BAF53D528FD6E38B59C10BC9C59A89097432B44D2A1426EFC09A7";
@@ -15,7 +15,10 @@ public sealed class FaceMeshExecutor : IDisposable
     private const string ModelRelative = "nativePC/otomo/ot000/mod/otomo000/otomo000.mod3";
     private Hook<Query>? hook;
     private int selected = FaceSelection.FirstGroup;
-    private int potVisible;
+    private int potVisible,outlineVisible;
+    public bool OutlineAvailable {get;private set;}
+    public string FaceTint {get;private set;}="Original";
+    public void SetOutlineVisible(bool visible)=>Volatile.Write(ref outlineVisible,visible?1:0);
     public void SetPotVisible(bool visible) => Volatile.Write(ref potVisible, visible ? 1 : 0);
     private long queries, closedEyeQueries, intermediateQueries;
     public long Queries => Interlocked.Read(ref queries);
@@ -33,10 +36,14 @@ public sealed class FaceMeshExecutor : IDisposable
         var model = Path.Combine(game, ModelRelative);
         try
         {
-            if (!File.Exists(model) || Hash(model) != ModelHash)
+            var modelHash=File.Exists(model)?Hash(model):"";
+            OutlineAvailable=modelHash==OutlineSelection.ModelHash;
+            if (modelHash != ModelHash && !OutlineAvailable)
             { Status = "Face model not installed; neutral model retained"; log(Status); return; }
             var material = Path.ChangeExtension(model, ".mrl3");
-            if (!File.Exists(material) || Hash(material) != MaterialHash)
+            var materialHash=File.Exists(material)?Hash(material):"";
+            FaceTint=materialHash==MaterialHash?"Original":OutlineSelection.Tint(materialHash);
+            if (OutlineAvailable ? OutlineSelection.Tint(materialHash)=="Unknown" : materialHash!=MaterialHash)
             { Status = "Face material mismatch; neutral fallback"; RestoreNeutral(game, model, log); log(Status); return; }
             var matches = PatternScanner.Scan(Signature);
             if (matches.Count != 1)
@@ -46,7 +53,7 @@ public sealed class FaceMeshExecutor : IDisposable
             }
             hook = Hook.Create<Query>(matches[0], Detour);
             Status = "Face mesh hook ready (game verification pending)";
-            log($"FACE_EXECUTOR_READY address=0x{matches[0]:X} groups=56000..56040 pot=55000");
+            log($"FACE_EXECUTOR_READY address=0x{matches[0]:X} groups=56000..56040 pot=55000 outline={OutlineAvailable} tint={FaceTint}");
         }
         catch (Exception ex)
         {
@@ -67,7 +74,7 @@ public sealed class FaceMeshExecutor : IDisposable
         try
         {
             var fallback = Path.Combine(game, "nativePC/plugins/CSharp/WhaleCompanion/face-neutral.mod3");
-            if (File.Exists(model) && Hash(model) == ModelHash && File.Exists(fallback) && Hash(fallback) == NeutralHash)
+            if (File.Exists(model) && (Hash(model) == ModelHash || Hash(model)==OutlineSelection.ModelHash) && File.Exists(fallback) && Hash(fallback) == NeutralHash)
             { File.Copy(fallback, model, true); log("FACE_FALLBACK_RESTORED on disk; restart game if already in a save"); }
             else log("FACE_FALLBACK_NOT_WRITTEN: use Install-PotToggle.ps1 -Restore after exiting game");
         }
@@ -83,6 +90,7 @@ public sealed class FaceMeshExecutor : IDisposable
         {
             // Original function reads this ushort immediately; no guessed object traversal.
             var group = *(ushort*)(queryObject + 4);
+            if (OutlineAvailable && OutlineSelection.TryEvaluate(group,Volatile.Read(ref outlineVisible)!=0,Volatile.Read(ref potVisible)!=0,Volatile.Read(ref selected),out var outline))return outline;
             if (AccessorySelection.TryEvaluate(group, Volatile.Read(ref potVisible) != 0, out var accessoryVisible)) return accessoryVisible;
             if (FaceSelection.TryEvaluate(group, Volatile.Read(ref selected), out var visible))
             {

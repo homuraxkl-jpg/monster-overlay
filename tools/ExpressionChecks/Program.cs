@@ -1,4 +1,4 @@
-﻿using WhaleCompanion;
+using WhaleCompanion;
 int checks = 0;
 void Check(bool ok, string label) { if (!ok) throw new Exception(label); checks++; }
 var reply = CompanionReply.Parse("{\"text\":\"你好\",\"emotion\":\"happy\",\"intensity\":9}");
@@ -545,6 +545,23 @@ foreach(var badPlayerText in new[]{playerText.Replace(OfflinePlainText.Heading(d
 Check(OfflinePlainText.Import(defaultOffline,"\uFEFF"+playerText.Replace("\n","\r\n")).Entries.Count==240,"Notepad BOM/Windows line endings accepted");
 var originalPlayer=OfflinePlainText.Import(defaultOffline,playerText.Replace("听到啦，马上过来！别趁我不在逞强。","（保留原句）"));
 Check(originalPlayer.Entries[0].Replacement==null,"Chinese restore-original phrase requires no JSON null syntax");
+// Extra shells track the selected expression and accessory without changing original groups.
+for(int selected=56000;selected<=56040;selected++)
+{
+    int visibleOutlines=0;
+    for(int group=57010;group<=57050;group++)
+    {
+        Check(OutlineSelection.TryEvaluate(group,true,false,selected,out var on) && on==(group-57010==selected-56000),"outline follows exactly one face sample");
+        if(on)visibleOutlines++;
+        Check(OutlineSelection.TryEvaluate(group,false,true,selected,out var off)&&!off,"disabled outline hides all face shells");
+    }
+    Check(visibleOutlines==1,"one expression outline visible");
+}
+Check(OutlineSelection.TryEvaluate(57001,true,false,56000,out var hiddenPot)&&!hiddenPot,"outline cannot reveal hidden pot");
+Check(OutlineSelection.TryEvaluate(57001,true,true,56000,out var shownPot)&&shownPot,"pot outline follows accessory");
+Check(!OutlineSelection.TryEvaluate(56000,true,true,56000,out _),"original face group forwards unchanged");
+Check(!OutlineSelection.TryEvaluate(0,true,true,56000,out _),"original body group forwards unchanged");
+Check(!new AppearanceSettings().ShowOutline,"outline opt-in default");
 Console.WriteLine($"PASS {checks} assertions");
 
 sealed class ProbeMemoryFixture : IReadOnlyLocalMemory {

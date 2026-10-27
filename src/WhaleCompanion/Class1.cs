@@ -59,7 +59,7 @@ public sealed partial class ProbePlugin : IPlugin
     private string nativeStatus = "Native output disabled";
     private readonly CompanionExpression expression = new();
     private readonly FaceMeshExecutor face = new();
-    private bool showHeadPot = false;
+    private bool showHeadPot = false,showOutline=false;
     private string appearanceStatus = "";
     private static string AppearancePath => Path.Combine(CompanionChat.ConfigurationDirectory, "appearance.json");
     private bool animatedFace = true, slowFacePreview;
@@ -186,9 +186,9 @@ public sealed partial class ProbePlugin : IPlugin
         };
         chat.NativeTrace += detail => WriteLog("NATIVE_CHAT_RESPONSE "+detail);
 
-        try { showHeadPot = AppearanceSettings.Load(AppearancePath).ShowHeadPot; }
+        try { var appearance=AppearanceSettings.Load(AppearancePath);showHeadPot=appearance.ShowHeadPot;showOutline=appearance.ShowOutline; }
         catch { appearanceStatus = "Invalid appearance.json; default no-pot appearance retained"; }
-        face.SetPotVisible(showHeadPot);
+        face.SetPotVisible(showHeadPot);face.SetOutlineVisible(showOutline);
         face.Initialize(WriteLog);
         chat.ReplyReceived += reply => { expression.Offer(reply.Emotion, reply.Intensity, 1, clock.Elapsed.TotalSeconds); WriteLog($"FACE_AI emotion={reply.Emotion} intensity={reply.Intensity:0.00}"); lineUntil = clock.Elapsed.TotalSeconds + 8; actionQuietUntil = lineUntil; };
         chat.ConversationReset += () => { observedConversation.Clear();chat.UpdateObservationContext("");sharedChat.Clear();ClearPeerChat(false); nativeChatEpoch++; nativeInput.Clear(); nativeDialogue.Clear(); nativeDeliveredId=-1; expression.Reset(clock.Elapsed.TotalSeconds); };
@@ -415,6 +415,7 @@ public sealed partial class ProbePlugin : IPlugin
         {
         RenderResponseControls();
         RenderConversationControls();
+        RenderAppearanceControls();
         chat.Render();
         offlineEditor.Render();
         if(!ImGui.CollapsingHeader(UiLanguage.Text("Advanced diagnostics (technical English)","高级诊断（英文技术字段）","進階診斷（英文技術欄位）")))return;
@@ -464,14 +465,6 @@ public sealed partial class ProbePlugin : IPlugin
         ImGui.TextUnformatted($"Blink cycles: {facePlayback.CompletedBlinks} | last closed updates: {facePlayback.LastClosedFrames}");
         ImGui.TextUnformatted($"Visible queries: closed {face.ClosedEyeQueries} | intermediate {face.IntermediateQueries}");
         ImGui.TextUnformatted("8-step fades; relaxed uses verified terminal only (intermediate eyes unsafe).");
-        if (ImGui.Checkbox("Show head pot", ref showHeadPot))
-        {
-            face.SetPotVisible(showHeadPot);
-            try { new AppearanceSettings { ShowHeadPot = showHeadPot }.Save(AppearancePath); appearanceStatus = "Appearance saved"; }
-            catch { appearanceStatus = "Applied for this session; could not save appearance"; }
-            WriteLog($"HEAD_POT visible={showHeadPot} ready={face.Ready}");
-        }
-        if (!string.IsNullOrEmpty(appearanceStatus)) ImGui.TextUnformatted(appearanceStatus);
         ImGui.Checkbox("Automatic face animation (experimental)", ref animatedFace);
         ImGui.Checkbox("Slow preview (diagnostic)", ref slowFacePreview);
         if (ImGui.Button("Test neutral")) TestFace("neutral");

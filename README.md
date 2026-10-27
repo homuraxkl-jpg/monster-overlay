@@ -90,7 +90,7 @@ SharpPluginLoader 是本C#插件的直接前置。Stracker's Loader、Performanc
 
 源码覆盖和玩家实机反馈见 [CURRENT-FEATURE-COVERAGE.md](CURRENT-FEATURE-COVERAGE.md)。离线通过不等于游戏验证；新统一回应、设置面板和英文路线仍需最终实测。单人显示伤害可能混入随从/环境；部分武器映射、弓/双刀特殊回避、部位破坏输出未全部实测。
 
-原VRM、身体、腿部、短裙和权重保持不变；可选描边与脸部饱和度尚未修改。来源和许可见 [THIRD-PARTY.md](THIRD-PARTY.md)。个人密钥、记忆、聊天和运行配置禁止加入发布包或Git。
+原VRM、身体、腿部、短裙和权重保持不变；可选描边与轻度脸部红润材质已有候选，原生渲染仍待实机确认。来源和许可见 [THIRD-PARTY.md](THIRD-PARTY.md)。个人密钥、记忆、聊天和运行配置禁止加入发布包或Git。
 
 
 ## 开发候选更新与回滚
@@ -147,3 +147,9 @@ SharpPluginLoader 是本C#插件的直接前置。Stracker's Loader、Performanc
 F9 → `Game output, multiplayer and memory` → 按需选择 `Export hunt context`、`Export recent dialogue`、`Export confirmed memories`，点击 `Export selected context to out`。只在点击时生成本机 ZIP，位置为 `nativePC/plugins/CSharp/WhaleCompanion/out/`；每次独立命名，不覆盖旧包，不自动上传。ZIP 包含 `summary.md`（最近对话压缩摘要）、`context.json`（所选详细资料）和说明。可以把摘要交给你自己的“大肥鱼”，需要细节时再给 JSON。这是确定性整理与 ZIP 压缩，不调用 AI；观察记录保留历史与来源限制，不代表当前战况。近期聊天与观察受现有容量/时限限制，不是全部历史记录；已确认记忆仅导出确认文本，不导出原始引用、人设、API配置或密钥文件。常见凭据形态会脱敏，但压缩包仍含你选择的私人内容，请自行保管。`out` 已排除在 Git 和公开发布白名单之外。
 
 `AI model and persona` 中的 `Reply language` 独立于界面语言；默认 `Follow persona / local user`，也可指定简体、繁体或英文。离线固定台词不会因这个选项自动翻译。
+
+### 可选描边与脸部红润
+
+外观候选仅在原170个网格之外追加88个独立轮廓层，原网格、UV、法线、骨架与权重按字节保留；不修改原VRM或贴图。原表情材质的双面兼容块保持不变。F9 → `Appearance` → `Optional model outline` 默认关闭，可在游戏中切换；轮廓跟随41级表情与 `Show head pot`，不会单独露出铁盆轮廓。额外网格增加渲染负担，实际原生阴影及性能仍需实机检查；离线预览不是游戏画面。
+
+脸部采用独立材质暖红倍率，**不是精确饱和度滑条**，影响head材质覆盖区域（包括眼部），不修改身体或服装。提供 `original` 原色、`soft-rosy` 轻度红润、`rosy` 较明显红润。默认候选使用 `soft-rosy`。切换脸部预设需退出游戏，运行 `tools/Install-OptionalAppearance.ps1 -Tint original`（或 `soft-rosy` / `rosy`）再启动；此脚本需本机候选 `dist/OptionalAppearancePreview` 与匹配插件，尚非独立公开发行安装器。恢复本次认可的旧外观：退出游戏运行 `tools/Install-OptionalAppearance.ps1 -Restore`。备份位于 `backups/optional-appearance-preview`；未知的外部改动会拒绝覆盖。脚本不重置私人配置。
