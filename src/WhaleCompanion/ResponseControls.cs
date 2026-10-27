@@ -1,4 +1,4 @@
-using ImGuiNET;
+﻿using ImGuiNET;
 namespace WhaleCompanion;
 public sealed partial class ProbePlugin
 {
@@ -7,6 +7,7 @@ public sealed partial class ProbePlugin
     {
         enabled=autoCompanion=actionCompanion=allWeaponCompanion=spiritCompanion=weaponStateDiagnostic=saedResponses=value;
         actionDirector.IncludeAllWeapons=value;
+        if(value){scenePaused=false;ApplyConversationOptions(false);}
     }
     private void SetAllResponses(bool value)
     {

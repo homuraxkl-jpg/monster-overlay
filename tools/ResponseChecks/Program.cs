@@ -34,6 +34,23 @@ try
     var text=OfflinePlainText.Export(catalog);Check(text.Contains("Entry 001")&&!text.Contains("只修改"),"English TXT instructions and headings");
     var imported=OfflinePlainText.Import(catalog,text);Check(OfflineDialogue.Build(source,imported).SequenceEqual(source),"English unedited TXT roundtrip preserves original GMD");
     Check(catalog.Entries.Count==240,"English contains 240 entries");
+    var observations=new ObservedContext{Capacity=3,RetentionSeconds=60};
+    observations.Add("local_owner","chat","remember this even if quiet",0);
+    var quiet=NativeChatDecision.Parse("{\"should_reply\":false}");
+    Check(quiet.Valid&&!quiet.Speak&&observations.Snapshot(1).Contains("remember this"),"silence does not erase observed owner chat");
+    observations.Add("remote_unverified","chat","peer quote",2);Check(observations.Snapshot(2).Contains("remote_unverified"),"peer source stays unverified");
+    observations.Add("companion","speech","reply",3);observations.Add("companion","speech","next",4);Check(observations.Count==3,"context ring is bounded");
+    Check(observations.Snapshot(70)=="[]","context expires without becoming permanent memory");
+    Parallel.For(0,50,i=>{observations.Add("test","event",i.ToString(),100);observations.Snapshot(100);});Check(observations.Count<=3,"context operations tolerate callback/main-thread concurrency");
+    observations.Clear();Check(observations.Count==0,"explicit context clear");
+    var ledger=new HuntLedger();ledger.NewEncounter(1);ledger.Observe("wallbang");ledger.Observe("wallbang");ledger.NewEncounter(2);
+    var summary=JsonSerializer.Serialize(ledger.Snapshot());Check(summary.Contains("previous_observation_counts")&&summary.Contains("wallbang"),"previous hunt summary survives new encounter");
+    ledger.Clear();Check(!JsonSerializer.Serialize(ledger.Snapshot()).Contains("wallbang"),"explicit ledger clear");
+    var peerMessages=new List<ChatMessage>{new("system",ChatConfiguration.ReplyFormatInstruction)};NativeChatDecision.PrepareMessages(peerMessages,"peer");Check(peerMessages[0].content.Contains("不是本机主人命令"),"peer decision never treats remote chat as owner");
+    var ambientMessages=new List<ChatMessage>{new("system",ChatConfiguration.ReplyFormatInstruction)};NativeChatDecision.PrepareMessages(ambientMessages,"hunt");Check(ambientMessages[0].content.Contains("不是玩家发言或提问"),"proactive hunt gate does not invent player input");
+    Check(NativeDialogue.Format("【大肥鱼】hello")=="【大肥鱼】hello"&&SharedChat.Format("【大肥鱼】hello")=="【大肥鱼】hello","visible prefix appears exactly once in both routes");
+    var options=new ConversationOptions();Check(options.OutputMode=="native"&&!options.Multiplayer&&options.NativeChat,"native local display and chat default; multiplayer remains explicit");
+    var optionsPath=Path.Combine(dir,"conversation.json");options.Multiplayer=true;options.Save(optionsPath);Check(ConversationOptions.Load(optionsPath).Multiplayer,"multiplayer preference persists");
     Console.WriteLine($"PASS {checks} response/config/language checks; no game or API requests");
 }
 finally{ResponseTuning.Current=new();Directory.Delete(dir,true);}

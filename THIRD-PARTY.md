@@ -47,3 +47,6 @@ P11.5单人备用：复用既有MAS/mhw-toolkit九参数显示观察器与Hunter
 
 
 独立插件候选包附带 System.Security.Cryptography.ProtectedData 8.0.0（.NET Foundation and Contributors，MIT），配套 LICENSE.ProtectedData.txt 与 NOTICE.ProtectedData.txt 从本机构建所用NuGet包提取；不包含用户DPAPI加密密钥文件。
+
+
+2026-10-27原生聊天就绪检测：沿用上述MAS/mhw-toolkit World 421810 PLAYER_BASE(+0x50139A0)及+0x50玩家链参考，以本项目保护性OS读取实现；已采样玩家作为备用，不在菜单中新增FindMasterPlayer/GetDti原生调用。近期对话/狩猎上下文与计数概览为本项目实现，未引入第三方记忆插件或新增外部服务。

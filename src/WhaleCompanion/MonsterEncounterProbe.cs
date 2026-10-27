@@ -71,6 +71,7 @@ public sealed class MonsterEncounterTrace
 public sealed record MonsterStateResult(string Kind,double Time);
 public sealed class MonsterStateDirector
 {
+    public event Action<string,double>? Observed;
     readonly Dictionary<ulong,MonsterEncounterSample> last=new();
     readonly Dictionary<(ulong,int),double> pending=new();
     readonly Queue<MonsterStateResult> ready=new();
@@ -80,6 +81,7 @@ public sealed class MonsterStateDirector
     public void Reset(){last.Clear();pending.Clear();ready.Clear();cooldown.Clear();mounting.Clear();}
     public void Add(string kind,double now)
     {
+        Observed?.Invoke(kind,now);
         if(cooldown.TryGetValue(kind,out var until)&&now<until)return;
         cooldown[kind]=now+ResponseTuning.Cooldown("monster",12);if(ready.Count>=8)ready.Dequeue();ready.Enqueue(new(kind,now));
     }

@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 
 namespace WhaleCompanion;
 
@@ -10,6 +10,7 @@ public sealed class NativeDialogue
     private readonly Queue<NativeLine> lines = new();
     private long sequence;
     private double nextAllowed;
+    public int Count=>lines.Count;
     public long LatestId => sequence;
     public int ExpiredCount { get; private set; }
     public void Clear() { lines.Clear(); nextAllowed = 0; }
@@ -44,6 +45,7 @@ public sealed class NativeDialogue
             count++;
         }
         var body = output.ToString().Trim();
-        return body.Length == 0 ? "" : "鲸鱼娘：" + body;
+        if(body.StartsWith(SharedChat.Prefix,StringComparison.Ordinal))body=body[SharedChat.Prefix.Length..].TrimStart();
+        return body.Length == 0 ? "" : SharedChat.Prefix + body;
     }
 }

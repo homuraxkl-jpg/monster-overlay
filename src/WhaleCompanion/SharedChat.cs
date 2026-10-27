@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 
 namespace WhaleCompanion;
 
@@ -20,7 +20,7 @@ public sealed class SharedChat
             if(Rune.IsControl(rune)||Rune.IsWhiteSpace(rune)){if(body.Length>0&&body[^1]!=' ')body.Append(' ');continue;}
             body.Append(rune.Value switch {'<'=>"＜",'>'=>"＞",_=>rune.ToString()});
         }
-        var clean=body.ToString().Trim();if(clean.Length==0)return "";
+        var clean=body.ToString().Trim();if(clean.StartsWith(Prefix,StringComparison.Ordinal))clean=clean[Prefix.Length..].TrimStart();if(clean.Length==0)return "";
         var output=new StringBuilder(Prefix);var bytes=Encoding.UTF8.GetByteCount(Prefix);
         var truncated=Encoding.UTF8.GetByteCount(Prefix+clean)>127;
         foreach(var rune in clean.EnumerateRunes())

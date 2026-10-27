@@ -35,9 +35,12 @@ foreach($row in $planned){
  else{$saved=[pscustomobject]@{Target=$row.Target;OriginalHash=(Hash $target);InstalledHash=$null}}
  $work+=@{Row=$row;Saved=$saved;Target=$target;Source=$source}
 }
+# Migrate the early preview's misplaced root wrapper only if it is still our own new file.
+$obsolete=@($existing | Where-Object { $_.Target -eq 'plugins/CSharp/WhaleCompanion/Apply-PlayerDialogue.ps1' -and !$_.OriginalHash -and (Hash (Target $_.Target)) -eq $_.InstalledHash -and !(@($planned | Where-Object Target -eq 'plugins/CSharp/WhaleCompanion/Apply-PlayerDialogue.ps1').Count) })
 New-Item -ItemType Directory -Force $BackupRoot | Out-Null
 # Validate all inputs before making any changes; save every original first.
 foreach($entry in $work){$backup=Join-Path $BackupRoot $entry.Row.Target;if($entry.Saved.OriginalHash -and !(@($existing | Where-Object Target -eq $entry.Row.Target).Count)){New-Item -ItemType Directory -Force (Split-Path -Parent $backup)|Out-Null;Copy-Item -LiteralPath $entry.Target -Destination $backup}}
 foreach($entry in $work){New-Item -ItemType Directory -Force (Split-Path -Parent $entry.Target)|Out-Null;Copy-Item -LiteralPath $entry.Source -Destination $entry.Target -Force;if((Hash $entry.Target) -ne $entry.Row.NewHash){throw 'Installed hash mismatch'};$entry.Saved.InstalledHash=$entry.Row.NewHash;$existing=@($existing | Where-Object Target -ne $entry.Row.Target)+@($entry.Saved)}
+foreach($old in $obsolete){Remove-Item -LiteralPath (Target $old.Target);$existing=@($existing | Where-Object Target -ne $old.Target)}
 $existing | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $statePath -Encoding utf8
 'Interface supplements verified; Chinese dialogue, credentials and private configuration retained.'

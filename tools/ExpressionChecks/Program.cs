@@ -238,9 +238,9 @@ spiritReplies.Reset();Check(spiritReplies.Observe(new(null,3),20)==null,"scene r
 foreach(var level in new[]{-1,0,4,99}) Check(spiritReplies.Observe(new(0,level),30)==null,"invalid or nonincreasing level silent");
 Check(spiritReplies.Observe(new(0,3),double.NaN)==null,"invalid time silent");
 Check(SpiritCompanion.LevelName(null)=="未知" && SpiritCompanion.LevelName(3)=="红刃","context level names");
-Check(NativeDialogue.Format("你好\0\r\n<MSTR>\t世界")=="鲸鱼娘：你好 ＜MSTR＞ 世界","native text strips controls and neutralizes game tags");
+Check(NativeDialogue.Format("你好\0\r\n<MSTR>\t世界")=="【大肥鱼】你好 ＜MSTR＞ 世界","native text strips controls and neutralizes game tags");
 Check(NativeDialogue.Format(" \r\n\0")=="","blank native message ignored");
-Check(NativeDialogue.Format(string.Concat(Enumerable.Repeat("🐋",181))).EnumerateRunes().Count()==185,"native truncation preserves Unicode scalars");
+Check(NativeDialogue.Format(string.Concat(Enumerable.Repeat("🐋",181))).EnumerateRunes().Count()==180+1+SharedChat.Prefix.EnumerateRunes().Count(),"native truncation preserves Unicode scalars");
 var nativeLines=new NativeDialogue();
 nativeLines.Enqueue("first",0);nativeLines.Enqueue("second",0);
 Check(nativeLines.Take(0,true)!.Text.EndsWith("first"),"native queue ordered");
@@ -404,7 +404,7 @@ foreach(var occupied in new[]{"typing","draft","pending"}){
  var m=SenderFixture();if(occupied=="typing")m.Data[0x202A58]=BitConverter.GetBytes(1);if(occupied=="draft")m.Data[0x202A5D][0]=65;if(occupied=="pending")m.Data[0x20325E][0]=1;
  Check(GameChatSender.TrySend(m,0x100000,0x200000,sharedText,out _)==ChatSendResult.Busy&&m.Writes.Count==0,"player input and pending send are never overwritten");
 }
-var whisper=SenderFixture();whisper.Data[0x114748]=BitConverter.GetBytes(2);Check(GameChatSender.TrySend(whisper,0x100000,0x200000,sharedText,out _)==ChatSendResult.Unavailable&&whisper.Writes.Count==0,"private whisper target not shared");
+var whisper=SenderFixture();whisper.Data[0x114748]=BitConverter.GetBytes(2);Check(GameChatSender.TrySend(whisper,0x100000,0x200000,sharedText,out _)==ChatSendResult.Busy&&whisper.Writes.Count==0,"private whisper target not shared");
 var mismatchedGui=SenderFixture();Check(GameChatSender.TrySend(mismatchedGui,0x100000,0x300000,sharedText,out _)==ChatSendResult.Unavailable&&mismatchedGui.Writes.Count==0,"GUI object mismatch prevents all writes");
 var failedFlag=SenderFixture();failedFlag.FailFlag=true;failedFlag.Data[0x202A5D][3]=7;var savedDraft=failedFlag.Data[0x202A5D].ToArray();
 Check(GameChatSender.TrySend(failedFlag,0x100000,0x200000,sharedText,out _)==ChatSendResult.Unavailable&&failedFlag.Data[0x202A5D].SequenceEqual(savedDraft),"send flag failure restores original input bytes");

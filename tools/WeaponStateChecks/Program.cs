@@ -652,6 +652,13 @@ var motionMemory=new MemoryFixture();motionMemory.Pointers[0x1006A8]=0x200000;mo
 var motionState=new NativeActionSample(0x100000,"DualBlades",3,94,10);
 Check(EvasionContactProbe.TryRead(motionMemory,motionState,10.1,0,0x400000,0x300000,out var motionContact)&&motionContact?.MotionInvulnerability==2,"motion proof reads only actual action low six bits as native bit extraction");
 motionMemory.Pointers[0xA00028]=0x900000;Check(EvasionContactProbe.TryRead(motionMemory,motionState,10.1,0,0x400000,0x300000,out motionContact)&&motionContact?.MotionInvulnerability==null,"foreign motion action cannot provide invulnerability proof");
+var readyMemory=new MemoryFixture();ulong readyModule=0x140000000;
+readyMemory.Pointers[readyModule+0x50139A0]=0x300000;readyMemory.Pointers[0x300050]=0x400000;readyMemory.Pointers[0x407630]=0x500000;readyMemory.Float(0x500060,200);readyMemory.Float(0x500064,150);
+Check(ChatReadiness.IsReady(readyMemory,readyModule,"421810"),"native output readiness reads the local actor without invoking native player methods");
+Check(ChatReadiness.IsActorReady(readyMemory,0x400000),"validated sampled actor can supply readiness without a global-chain assumption");
+Check(!ChatReadiness.IsActorReady(readyMemory,0),"missing sampled actor is never ready");
+readyMemory.Float(0x500064,float.NaN);Check(!ChatReadiness.IsReady(readyMemory,readyModule,"421810"),"invalid player HP keeps game output paused");
+Check(!ChatReadiness.IsReady(readyMemory,readyModule,"unknown")&&!ChatReadiness.IsReady(new MemoryFixture(),readyModule,"421810"),"menus/missing data and unsupported revisions stay paused");
 Console.WriteLine($"PASS {checks} weapon-state checks; no game/API calls");
 }
 catch(Exception ex){Console.Error.WriteLine("FAIL: "+ex.Message);Environment.ExitCode=1;}

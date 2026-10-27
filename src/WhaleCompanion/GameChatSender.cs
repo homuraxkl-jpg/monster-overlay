@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Text;
 
 namespace WhaleCompanion;
@@ -38,7 +38,7 @@ public static class GameChatSender
         if(!memory.Read(gui+0x13FD0,8,out var pointer)||BitConverter.ToUInt64(pointer)!=chat){status="聊天对象布局未通过校验";return ChatSendResult.Unavailable;}
         if(!memory.Read(gui+0x14748,4,out var targetBytes)){status="无法读取当前频道";return ChatSendResult.Unavailable;}
         var target=BitConverter.ToInt32(targetBytes);
-        if(target is not (0 or 1 or 3 or 4)){status=target==2?"当前为私聊频道，暂不共享":"当前频道未验证";return ChatSendResult.Unavailable;}
+        if(target is not (0 or 1 or 3 or 4)){status=target==2?"当前为私聊频道，暂不共享":"当前频道未验证";return target==2?ChatSendResult.Busy:ChatSendResult.Unavailable;}
         if(!memory.Read(chat+0x2A58,4,out var visible)||!memory.Read(chat+0x325E,1,out var flag)||!memory.Read(chat+0x2A5D,128,out var original))return ChatSendResult.Unavailable;
         var inputVisible=BitConverter.ToInt32(visible);
         if(inputVisible is not (0 or 1)||flag[0]>1){status="聊天输入状态布局未验证";return ChatSendResult.Unavailable;}

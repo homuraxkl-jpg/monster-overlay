@@ -5,7 +5,7 @@ ROOT=Path(__file__).resolve().parents[1]
 fixture=ROOT/'research'/'response-install-fixtures'/uuid.uuid4().hex
 native=fixture/'game/nativePC';backup=fixture/'backup';plugin=native/'plugins/CSharp/WhaleCompanion'
 (plugin/'config/dialogue').mkdir(parents=True)
-canaries={"config/settings.json":b"private settings canary","config/deepseek.dpapi":b"encrypted canary","config/saved-memories.json":b"memory canary","config/dialogue/ot_auto_chS.json":b"Chinese canary","config/dialogue/ot_auto_eng.json":b"custom English canary","Apply-PlayerDialogue.ps1":b"old script canary"}
+canaries={"config/settings.json":b"private settings canary","config/deepseek.dpapi":b"encrypted canary","config/saved-memories.json":b"memory canary","config/dialogue/ot_auto_chS.json":b"Chinese canary","config/dialogue/ot_auto_eng.json":b"custom English canary","玩家自定义/Apply-PlayerDialogue.ps1":b"old script canary"}
 for name,data in canaries.items():p=plugin/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
 script=ROOT/'tools/Install-ResponseInterfacePreview.ps1'
 env=dict(os.environ,PSModulePath=os.environ['SystemRoot']+'/System32/WindowsPowerShell/v1.0/Modules')
@@ -15,11 +15,16 @@ def run(restore=False,running=False):
 assert run(running=True).returncode!=0
 r=run();assert r.returncode==0,r.stderr
 for name,data in canaries.items():
- if name!='Apply-PlayerDialogue.ps1':assert (plugin/name).read_bytes()==data
+ if name!='玩家自定义/Apply-PlayerDialogue.ps1':assert (plugin/name).read_bytes()==data
 rows=json.loads((backup/'manifest.json').read_text(encoding='utf-8-sig'))
 for row in rows:assert hashlib.sha256((native/row['Target']).read_bytes()).hexdigest().upper()==row['InstalledHash']
+# An early preview put this wrapper at plugin root; remove only its hash-matched owned file.
+legacy=plugin/'Apply-PlayerDialogue.ps1';legacy.write_bytes((ROOT/'dist/ResponseInterfacePreview/Apply-PlayerDialogue.ps1').read_bytes())
+rows.append({"Target":"plugins/CSharp/WhaleCompanion/Apply-PlayerDialogue.ps1","OriginalHash":None,"InstalledHash":hashlib.sha256(legacy.read_bytes()).hexdigest().upper()})
+(backup/'manifest.json').write_text(json.dumps(rows),encoding='utf-8')
 assert run().returncode==0
-edited=plugin/'Apply-PlayerDialogue.ps1';data=edited.read_bytes();edited.write_bytes(data+b'edit')
+assert not legacy.exists()
+edited=plugin/'玩家自定义/Apply-PlayerDialogue.ps1';data=edited.read_bytes();edited.write_bytes(data+b'edit')
 assert run(restore=True).returncode!=0
 edited.write_bytes(data)
 r=run(restore=True);assert r.returncode==0,r.stderr

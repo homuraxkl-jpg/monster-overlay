@@ -38,6 +38,7 @@ SharpPluginLoader 是本C#插件的直接前置。Stracker's Loader、Performanc
 | 选项 | 作用 |
 |---|---|
 | Model ID | 服务提供的精确模型ID，可手工填写 |
+| Native chat decision/reply model | 可独立选择原生聊天相关性判断与回复模型，可选轻量模型，一次判断并生成 |
 | Chat completions URL | 完整的OpenAI兼容Chat Completions接口URL，不是Responses接口；默认DeepSeek |
 | External persona | 多行人设输入框；保存到 `config/persona.md` |
 | Save model and persona | 校验后保存到本机，重新加载并清空当前对话；不删除长期记忆 |
@@ -45,7 +46,7 @@ SharpPluginLoader 是本C#插件的直接前置。Stracker's Loader、Performanc
 | Save encrypted key | 用当前Windows用户DPAPI加密保存；其他Windows账号/设备不能直接使用该加密文件 |
 | Send / Cancel / New conversation | 手动发送、取消当前请求、开始新对话；保存的跨对话记忆另行管理 |
 
-修改模型也会使原生聊天判断使用同一模型；需要不同模型可手工编辑 `settings.json` 的 `NativeChatModel`。不同服务的兼容性与联网调用仍需实测；本轮没有代用户发送收费测试请求。
+`Native chat decision/reply model` 可以独立填写原生聊天判断与回复所用模型（settings.json 的 NativeChatModel），战斗事件改写继续使用 Model ID。可以选择较轻量的模型处理聊天相关性：单次请求同时判断并生成，不必为每条消息先后调用两个模型。不同服务的兼容性与联网调用仍需实测；本轮没有代用户发送收费测试请求。
 
 ## 外置文件与默认值
 
@@ -104,3 +105,39 @@ SharpPluginLoader 是本C#插件的直接前置。Stracker's Loader、Performanc
 前者更新DLL及动态战斗说明，后者更新界面说明/离线工具与缺失的英文编辑资源。补充安装不覆盖已有英文自定义文件，不复制当前开发配置，不更改简繁资源或语言选择文件。文件哈希与原始文件保存在 `backups`，不是普通玩家必须运行的构建过程。
 
 回退补充文件：`./tools/Install-ResponseInterfacePreview.ps1 -Restore`；回退整个动态战斗阶段：`./tools/Install-DialogueLanguages.ps1 -Package DynamicCombatPreview -Restore`。这是回到原阶段基线；需要回到最近一次更新前DLL时，应从刷新脚本保存的中间版本恢复，不能把阶段基线称为最近一版。脚本遇到安装后被用户编辑的文件会拒绝覆盖，先保留编辑再处理。
+
+
+## 原生输出、多人联机与游戏内对话
+
+进入存档后，在 `Game output, multiplayer and memory` 管理以下开关。刚载入存档时，可点 `Enable all companion categories` 或 `Resume game output and chat (loaded save)` 恢复就绪状态。
+
+| 英文选项 | 作用 |
+|---|---|
+| Show replies in native game messages | 默认开启；单机将对白显示到本机游戏原生消息区域，统一以【大肥鱼】开头；关闭后才选择模组字幕窗口 |
+| Show chat status overlay (diagnostic) | 默认关闭；只是额外的诊断状态浮窗，不是对白输出位置 |
+| Multiplayer mode: send companion lines to game chat | 默认关闭；开启后对话回复、AI战斗回应和固定离线回应都进入玩家原生聊天，沿用当前非私聊频道；游戏显示当前猎人身份，正文用【大肥鱼】区别AI |
+| Chat with AI using native game chat | 直接在游戏聊天输入消息，无需改到F9输入；名字与问题优先考虑回应；原消息仍由游戏正常发送，不会被插件改写 |
+| Remember peer chat in multiplayer | 多人模式下读取已识别的队友聊天作为上下文；显示名不等于已验证身份 |
+| AI may reply to relevant peer chat | 允许对合适的队友消息回应；不是每条必答；本机主人输入优先，AI自己的【大肥鱼】输出不会再次触发AI |
+| Remember recent hunt observations | 将已检测的战斗事实保留为短期AI上下文，区别于当前HP/武器快照 |
+| AI may add relevant proactive hunt comments | 可选；默认关闭。动态AI开启后，有新狩猎观察且到了间隔，才让原生聊天判断模型决定是否补一句主动陪伴；没有新信息不持续空转 |
+| Clear recent hunt/chat context | 清空近期观察，不删除人工确认的长期记忆；会取消当前请求 |
+
+本机原生提示不是艾露猫原生气泡或带猫头像的台词。多人模式使用游戏玩家聊天输入/发送路线，不冒充猫的原生发言者；127 UTF8字节上限包括【大肥鱼】，过长会安全省略。不会覆盖你正在输入的文本，也不主动改频道或发送私聊。检测到当前私聊时不向该频道自动共享；本机私聊文本也不作为自动AI输入。多人发送仅表示交给了游戏，仍需队友实机确认收到，不能以本机哈希代替联机验收。
+
+原生界面暂时未就绪会排队；布局/调用异常时停止该路径并保留字幕回退，面板显示原因。旧版原生显示开关没有持久化且默认关闭，可能导致重启后回到模组字幕；现在输出偏好保存到 `config/conversation.json`。高级诊断不再承担普通用户开关入口。
+
+这些聊天选项与“战斗台词动态改写”不同：关闭 Dynamic AI rewriting 只切回战斗/状态固定句，不关闭你明确启用的原生聊天AI功能。若不希望主动AI读聊天，请关闭对应聊天选项。
+
+## 上下文、沉默与跨对话记忆
+
+已有最近对话轮数/字符限额和人工确认的跨对话记忆。现在补充了独立的近期观察层：
+
+- 当次对话历史按 `ContextTurns` / `MaxContextCharacters` 保留；原生聊天的相关性判断可返回 should_reply=false，沉默的消息仍留在近期观察，不会因此失忆。
+- 近期狩猎事实和聊天观察各为有界队列，默认最多64条、20分钟，并按字符预算选择最近内容送入模型；只在内存中，不自动保存聊天文件。
+- 狩猎概览另保留当前及上一段有记录遭遇的观察分类计数，避免近期队列淘汰后所有线索消失。它是记录次数，不是精确动作/命中总数、真实DPS或主人贡献。
+- 怪物结果和伤害估计不据此获得主人归属；过往观察不当作当前状态；队友引用不能成为配置、权限或记忆授权。
+- `New conversation` 清空对话历史与近期聊天引用，保留当前狩猎观察及人工确认的长期事实；换存档会清掉近期观察，长期事实仍由用户自行管理。
+- 在 `Cross-conversation memory` 中启用 `Use saved memories in AI requests`，可从最近主人输入拟定或手工填写事实，再 `Save memory`。支持编辑/删除/清空；没有用户保存就不自动写永久记忆。手工 `memory.md` 与确认记忆 `saved-memories.json` 是分开的。
+
+`conversation.json` 还可调 NativeChatCooldownSeconds（默认8秒）与 ProactiveIntervalSeconds（默认45秒）。主动判断可以用你选择的轻量模型，保留上下文、偶尔不回话是预期行为；不把“保持沉默”误判为“没有读到”。

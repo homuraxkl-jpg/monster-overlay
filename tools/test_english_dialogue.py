@@ -5,6 +5,8 @@ r=Path(__file__).resolve().parents[1];fixture=r/'research/english-dialogue-fixtu
 shutil.copytree(stage/'config',plugin/'config');shutil.copytree(stage/'OfflineTools',plugin/'OfflineTools');(plugin/'玩家自定义').mkdir()
 shutil.copyfile(stage/'玩家自定义/Palico-dialogue-English.txt',plugin/'玩家自定义/Palico-dialogue-English.txt')
 (plugin/'玩家自定义/台词语言.txt').write_text('English',encoding='utf-8-sig')
+shutil.copyfile(stage/'Apply-PlayerDialogue.ps1',plugin/'玩家自定义/Apply-PlayerDialogue.ps1')
+shutil.copyfile(stage/'Apply-OfflineDialogue.ps1',plugin/'Apply-OfflineDialogue.ps1')
 chinese=game/'nativePC/common/text/ot_auto_chS.gmd';chinese.parent.mkdir(parents=True);chinese.write_bytes(b'Chinese untouched canary')
 text=plugin/'玩家自定义/Palico-dialogue-English.txt';value=text.read_text(encoding='utf-8-sig');heading='【Entry 001】';value=value.replace(heading+'\n',heading+"\nI'm here. ",1);text.write_text(value,encoding='utf-8-sig')
 p=subprocess.run([str(plugin/'OfflineTools/OfflineDialogueTool.exe'),'build',str(plugin)],capture_output=True);assert p.returncode==0,p.stderr
@@ -13,7 +15,8 @@ env=dict(os.environ,PSModulePath=os.environ['SystemRoot']+'/System32/WindowsPowe
 def apply(restore=False):
  command="$ErrorActionPreference='Stop'; function Get-CimInstance { @() }; & '"+str(r/'tools/Apply-OfflineDialogue.ps1')+"' -GameRoot '"+str(game)+"' -Language eng"+(' -Restore' if restore else '')
  return subprocess.run(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-Command',command],capture_output=True,env=env)
-p=apply();assert p.returncode==0,p.stderr
+wrapper="$ErrorActionPreference='Stop'; function Get-CimInstance { @() }; & '"+str(plugin/'玩家自定义/Apply-PlayerDialogue.ps1')+"'"
+p=subprocess.run(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-Command',wrapper],capture_output=True,env=env);assert p.returncode==0,p.stderr
 installed=game/'nativePC/common/text/ot_auto_eng.gmd';assert installed.read_bytes()==source.read_bytes();assert chinese.read_bytes()==b'Chinese untouched canary'
 p=apply(True);assert p.returncode==0,p.stderr;assert not installed.exists();assert chinese.read_bytes()==b'Chinese untouched canary'
-print(json.dumps({"passed":True,"real_game_modified":False,"checks":["English TXT edit","CLI build","format validation","English source hash","GMD install hash","Chinese retained","GMD restore"]}))
+print(json.dumps({"passed":True,"real_game_modified":False,"checks":["English TXT edit","CLI build","player wrapper entrypoint","format validation","English source hash","GMD install hash","Chinese retained","GMD restore"]}))

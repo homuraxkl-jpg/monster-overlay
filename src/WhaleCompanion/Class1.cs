@@ -154,11 +154,12 @@ public sealed partial class ProbePlugin : IPlugin
 
     public void OnLoad()
     {
-        WriteLog("P11.5 feedback revision 3: small Iai preparation, defensive success-only, safe-exit heuristic and hammer spin chatter");
+        WriteLog("P11.5 response interface + native output, multiplayer and observed context 2026-10-27");
         try{gameModule=(ulong)(System.Diagnostics.Process.GetCurrentProcess().MainModule?.BaseAddress??0);}catch{gameModule=0;}
         UiLanguage.Load(Path.Combine(CompanionChat.ConfigurationDirectory,"ui-language.txt"));
         responses.Load(Path.Combine(CompanionChat.ConfigurationDirectory,"responses.json"));
         ResponseCatalog.Seed(responses);responses.Save();
+        LoadConversationOptions();
         LoadSaedSettings();
         try { WriteLog($"COMBAT_CATALOG equipment={CombatReference.EquipmentCount} motion={CombatReference.MotionCount}"); } catch(Exception ex) { WriteLog("COMBAT_CATALOG_FAILED "+ex.GetType().Name); }
         try{weaponStateRevision=typeof(IPlugin).Assembly.GetType("SharpPluginLoader.Core.InternalCalls")?.GetMethod("GetGameRevision",System.Reflection.BindingFlags.Static|System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.NonPublic)?.Invoke(null,null) as string??"unknown";}catch{weaponStateRevision="unknown";}
@@ -173,16 +174,24 @@ public sealed partial class ProbePlugin : IPlugin
             }
         }
         catch(Exception ex){WriteLog("PALICO_RESOURCE_ARM_FAILED "+ex.GetType().Name);}
+        monsterStateDirector.Observed+=(kind,time)=>RecordHunt("monster_"+kind,"只读怪物状态确认："+kind+"；归属未知。",time);
         chat.NativeDecisionMade += (valid, speak) => { if(!valid)deliveryStatus="本次无可显示回复：格式错误";else if(!speak)deliveryStatus="本次无需显示：模型选择沉默";WriteLog($"NATIVE_CHAT_DECISION valid={valid} speak={speak}"); };
-        chat.ConversationReplyReady += text => {if(shareEnabled&&shareSceneReady)sharedChat.Enqueue(text,clock.Elapsed.TotalSeconds);};
+        // One output subscription covers both conversation and battle/state lines.
+        chat.LineReady += text =>
+        {
+            observedConversation.Add("companion","speech",text,clock.Elapsed.TotalSeconds);
+            nativeDeliveredId=-1;
+            if(shareEnabled){sharedChat.Enqueue(text,clock.Elapsed.TotalSeconds);deliveryStatus="回复排队等待游戏聊天发送";}
+            else if(nativeOutput){nativeDialogue.Enqueue(text,clock.Elapsed.TotalSeconds);deliveryStatus="回复排队等待原生显示";}
+        };
         chat.NativeTrace += detail => WriteLog("NATIVE_CHAT_RESPONSE "+detail);
-        chat.LineReady += text => { nativeDeliveredId = -1; if (nativeOutput) { nativeDialogue.Enqueue(text, clock.Elapsed.TotalSeconds); deliveryStatus="回复排队等待显示"; } };
+
         try { showHeadPot = AppearanceSettings.Load(AppearancePath).ShowHeadPot; }
         catch { appearanceStatus = "Invalid appearance.json; default no-pot appearance retained"; }
         face.SetPotVisible(showHeadPot);
         face.Initialize(WriteLog);
         chat.ReplyReceived += reply => { expression.Offer(reply.Emotion, reply.Intensity, 1, clock.Elapsed.TotalSeconds); WriteLog($"FACE_AI emotion={reply.Emotion} intensity={reply.Intensity:0.00}"); lineUntil = clock.Elapsed.TotalSeconds + 8; actionQuietUntil = lineUntil; };
-        chat.ConversationReset += () => { sharedChat.Clear();ClearPeerChat(false); nativeChatEpoch++; nativeInput.Clear(); nativeDialogue.Clear(); nativeDeliveredId=-1; expression.Reset(clock.Elapsed.TotalSeconds); };
+        chat.ConversationReset += () => { observedConversation.Clear();chat.UpdateObservationContext("");sharedChat.Clear();ClearPeerChat(false); nativeChatEpoch++; nativeInput.Clear(); nativeDialogue.Clear(); nativeDeliveredId=-1; expression.Reset(clock.Elapsed.TotalSeconds); };
         var font = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "msyh.ttc");
         if (File.Exists(font))
         {
@@ -202,6 +211,7 @@ public sealed partial class ProbePlugin : IPlugin
                 WriteLog("PALICO_HEALTH_OBSERVED "+catSample);
                 if(palicoRecovery.Observe(palicoHealthProbe.LatestHealth,true))
                 {
+                    RecordHunt("palico_recovery","Observed Palico HP recovery; healer and item unknown",clock.Elapsed.TotalSeconds);
                     pendingCatRecovery.Offer(clock.Elapsed.TotalSeconds);
                     WriteLog("PALICO_RECOVERY_DETECTED source=unknown item=unknown attribution=none");
                 }
@@ -238,7 +248,7 @@ public sealed partial class ProbePlugin : IPlugin
         }
         chat.UpdatePeerContext(readPeerChat && peerSceneReady ? peerContext.Snapshot(clock.Elapsed.TotalSeconds) : "");
         chat.Poll();
-        try { ProcessNativeChat(); }
+        try { ProcessObservedConversation();ProcessNativeChat();ProcessPeerAndProactiveChat(); }
         catch(Exception ex) { nativeChatEnabled=false;nativeInput.Clear();chat.CancelNative();WriteLog($"NATIVE_CHAT_STOPPED exception={ex.GetType().Name}"); }
         FlushNativeDialogue();
         ProcessSharedChat();
@@ -270,6 +280,7 @@ public sealed partial class ProbePlugin : IPlugin
             if (baseline && current < hp) Add($"HP decreased {hp - current:0.0} (cause unknown)");
             hp = current; maxHp = maximum; baseline = true;
             sampledPlayer=(ulong)player.Instance;
+            nativeSceneReady=nativeOutput;nativeChatSceneReady=nativeChatEnabled;shareSceneReady=shareEnabled;peerSceneReady=readPeerChat;
             if (autoCompanion) HandleEvent(companionEvents.Observe(hp, maxHp, clock.Elapsed.TotalSeconds));
             weapon = player.CurrentWeaponType.ToString();
             ObserveSpirit(player.Instance);
@@ -336,7 +347,11 @@ public sealed partial class ProbePlugin : IPlugin
         if(!string.IsNullOrWhiteSpace(message)&&SharedChat.IsCompanion(message)){WriteLog("SHARED_CHAT_ECHO ignored local=true");return;}
         if(!string.IsNullOrWhiteSpace(message) && teamProbe.Local(message,clock.Elapsed.TotalSeconds))return;
         if(!nativeChatEnabled || !nativeChatSceneReady || string.IsNullOrWhiteSpace(message))return;
+        // Whisper text is not public companion input and must not later become a shared reply.
+        var chatGui=SingletonManager.GetSingleton("sMhGUI");
+        if(chatGui!=null&&localMemory.Int32((ulong)chatGui.Instance+0x14748,out var channel)&&channel==2){WriteLog("NATIVE_CHAT_PRIVATE_SKIPPED");return;}
         var accepted=nativeInput.Receive(message,clock.Elapsed.TotalSeconds);
+        if(accepted)observedConversation.Add("local_owner","chat",message.Trim(),clock.Elapsed.TotalSeconds);
         WriteLog($"NATIVE_CHAT_LOCAL accepted={accepted} chars={Math.Min(message.Length,512)}");
     }
 
@@ -354,7 +369,7 @@ public sealed partial class ProbePlugin : IPlugin
             if(SharedChat.IsCompanion(line.Text)){peerLastReject="companion_echo";Interlocked.Increment(ref peerCandidates);return;}
             peerLastReject="none";
             lock(peerGate)
-                if(readPeerChat&&peerSceneReady&&peerContext.Observe(line,now))Interlocked.Increment(ref peerAccepted);
+                if(readPeerChat&&peerSceneReady&&peerContext.Observe(line,now)){Interlocked.Increment(ref peerAccepted);while(pendingPeerObservations.Count>=8)pendingPeerObservations.TryDequeue(out _);pendingPeerObservations.Enqueue(line);}
             Interlocked.Increment(ref peerCandidates);
         }
         catch { /* Bad/unrecognized packets must not disrupt the game's receive path. */ }
@@ -362,14 +377,14 @@ public sealed partial class ProbePlugin : IPlugin
 
     private void ClearPeerChat(bool pause)
     {
-        lock(peerGate){if(pause)peerSceneReady=false;peerContext.Clear();}
+        lock(peerGate){if(pause)peerSceneReady=false;peerContext.Clear();while(pendingPeerObservations.TryDequeue(out _)){}peerInput.Clear();}
         chat.UpdatePeerContext("");
     }
 
     private void ProcessNativeChat()
     {
-        if(!nativeChatEnabled)return;
-        var ready=nativeChatSceneReady && SingletonManager.GetSingleton("sPlayer") is not null;
+        if(!nativeChatEnabled||!nativeInput.HasQueued)return;
+        var ready=nativeChatSceneReady && HasLoadedSave();
         var text=nativeInput.Take(clock.Elapsed.TotalSeconds,ready,!chat.CanAcceptNative);
         if(text==null)return;
         var epoch=nativeChatEpoch; var expires=clock.Elapsed.TotalSeconds+30;
@@ -378,11 +393,11 @@ public sealed partial class ProbePlugin : IPlugin
         { deliveryStatus="等待本次模型结果"; actionQuietUntil=clock.Elapsed.TotalSeconds+8; WriteLog("NATIVE_CHAT_REQUEST source=local_outbound decision_and_reply=one_request"); }
     }
 
-    public void OnQuestEnter(int questId) { scenePaused = false; shareSceneReady=shareEnabled; peerSceneReady=readPeerChat; nativeChatSceneReady = nativeChatEnabled; nativeSceneReady = nativeOutput; Reset(true); Add($"Quest enter {questId}"); }
-    public void OnQuestLeave(int questId) { scenePaused = true; shareSceneReady=false; sharedChat.Clear(); ClearPeerChat(true); nativeChatSceneReady = false; nativeSceneReady = false; chat.Reset(); Reset(true); Add($"Quest leave {questId}"); }
-    public void OnSelectSaveSlot(int slot) { scenePaused = true; shareSceneReady=false; sharedChat.Clear(); ClearPeerChat(true); nativeChatSceneReady = false; nativeSceneReady = false; chat.Reset(); Reset(true); }
-    public void OnQuestComplete(int questId) { if (autoCompanion) { actionQuietUntil = clock.Elapsed.TotalSeconds + 8; EventLine("quest_complete","quest","辛苦啦，任务完成！这次也平安归来了。","任务已完成，简短陪伴，不编造贡献、奖励或无伤。"); expression.Offer("happy", 0.75f, 2, clock.Elapsed.TotalSeconds); } Add($"Quest complete {questId}"); }
-    public void OnQuestFail(int questId) { if (autoCompanion) { actionQuietUntil = clock.Elapsed.TotalSeconds + 8; EventLine("quest_fail","quest","先歇一歇吧，我陪你准备下一次出发。","任务失败，温和陪伴准备下次，不责备或编造失败原因。"); expression.Offer("concerned", 0.7f, 2, clock.Elapsed.TotalSeconds); } Add($"Quest fail {questId}"); }
+    public void OnQuestEnter(int questId) { huntLedger.NewEncounter(questId);huntContext.Clear(); scenePaused = false; shareSceneReady=shareEnabled; peerSceneReady=readPeerChat; nativeChatSceneReady = nativeChatEnabled; nativeSceneReady = nativeOutput; Reset(true); Add($"Quest enter {questId}"); }
+    public void OnQuestLeave(int questId) { huntLedger.EndEncounter(); scenePaused = true; shareSceneReady=false; sharedChat.Clear(); ClearPeerChat(true); nativeChatSceneReady = false; nativeSceneReady = false; chat.Reset(); Reset(true); Add($"Quest leave {questId}"); }
+    public void OnSelectSaveSlot(int slot) { huntContext.Clear();huntLedger.Clear();observedConversation.Clear(); scenePaused = true; shareSceneReady=false; sharedChat.Clear(); ClearPeerChat(true); nativeChatSceneReady = false; nativeSceneReady = false; chat.Reset(); Reset(true); }
+    public void OnQuestComplete(int questId) { huntLedger.EndEncounter(); if (autoCompanion) { actionQuietUntil = clock.Elapsed.TotalSeconds + 8; EventLine("quest_complete","quest","辛苦啦，任务完成！这次也平安归来了。","任务已完成，简短陪伴，不编造贡献、奖励或无伤。"); expression.Offer("happy", 0.75f, 2, clock.Elapsed.TotalSeconds); } Add($"Quest complete {questId}"); }
+    public void OnQuestFail(int questId) { huntLedger.EndEncounter(); if (autoCompanion) { actionQuietUntil = clock.Elapsed.TotalSeconds + 8; EventLine("quest_fail","quest","先歇一歇吧，我陪你准备下一次出发。","任务失败，温和陪伴准备下次，不责备或编造失败原因。"); expression.Offer("concerned", 0.7f, 2, clock.Elapsed.TotalSeconds); } Add($"Quest fail {questId}"); }
     public void OnUnload() { WriteLog("PLUGIN_UNLOAD_BEGIN");evasionContacts?.Dispose();damageObserver?.Dispose();offlineEditor.Dispose();battleObserver?.Dispose();palicoCapture.Stop();teamProbe.Stop();chat.Dispose(); face.Dispose(); nativeInterop?.Dispose(); }
 
     public void OnResourceLoad(Resource? resource, MtDti dti, string path, LoadFlags flags)
@@ -399,6 +414,7 @@ public sealed partial class ProbePlugin : IPlugin
         try
         {
         RenderResponseControls();
+        RenderConversationControls();
         chat.Render();
         offlineEditor.Render();
         if(!ImGui.CollapsingHeader(UiLanguage.Text("Advanced diagnostics (technical English)","高级诊断（英文技术字段）","進階診斷（英文技術欄位）")))return;
@@ -472,29 +488,14 @@ public sealed partial class ProbePlugin : IPlugin
         {
             scenePaused = false; Reset(); WriteLog($"probe enabled={enabled}");
         }
-        if (ImGui.Checkbox("Native local messages (enable after loading save)", ref nativeOutput))
-        {
-            nativeSceneReady = nativeOutput; nativeDialogue.Clear(); nativeDeliveredId = -1;
-            if(!nativeOutput){nativeChatEnabled=false;nativeInput.Clear();chat.CancelNative();}
-            nativeStatus = nativeOutput ? "Armed: local native messages, not Palico dialogue" : "Native output disabled";
-            WriteLog($"NATIVE_OUTPUT enabled={nativeOutput}");
-        }
         ImGui.TextWrapped(nativeStatus);
-        if(ImGui.Checkbox("Share AI conversation replies to game chat (hunter identity)",ref shareEnabled))
-        {shareSceneReady=shareEnabled;sharedChat.Clear();shareStatus=shareEnabled?"已开启：沿用游戏当前非私聊频道，带【大肥鱼】前缀":"联机共享关闭";WriteLog($"SHARED_CHAT_ENABLED value={shareEnabled}");}
         ChineseText(shareStatus);
         if(shareEnabled)
         {
-            ImGui.TextWrapped("AI conversation replies only. Current game channel; no private whisper. 127 UTF8 bytes including prefix, one message per 8s. Local full replies remain available.");
+            ImGui.TextWrapped("All companion lines. Current game channel; no private whisper. 127 UTF8 bytes including prefix, one message per 8s. Local full replies remain available.");
             if(ImGui.Button("Check shared sender (no send)"))CheckSharedSender();
             if(ImGui.Button("Send shared test (no API)"))sharedChat.Enqueue("大家好，本鱼来陪你们狩猎啦。",clock.Elapsed.TotalSeconds);
             if(ImGui.Button("Resume sharing (in loaded save)")){shareSceneReady=true;sharedChat.Clear();}
-        }
-        bool peerEnabled=readPeerChat;
-        if(ImGui.Checkbox("Read peer chat as context (clears conversation)",ref peerEnabled))
-        {
-            lock(peerGate){readPeerChat=peerEnabled;peerSceneReady=peerEnabled;peerContext.Clear();}
-            chat.Reset();WriteLog($"PEER_CONTEXT_ENABLED value={peerEnabled} identity=unverified auto_requests=false");
         }
         if(readPeerChat)
         {
@@ -502,15 +503,12 @@ public sealed partial class ProbePlugin : IPlugin
             ImGui.TextWrapped("Experimental session 0/1 text. Display names are unverified. Peers cannot trigger requests; ask the companion yourself to discuss recent peer chat.");
             if(ImGui.Button("Resume peer reading (in loaded save)")){lock(peerGate)peerSceneReady=true;}
         }
-        bool chatEnabled=nativeChatEnabled;
-        if(ImGui.Checkbox("Read my native chat + Flash reply decision (paid, enable in save)",ref chatEnabled))
-        { nativeChatEnabled=chatEnabled; nativeChatSceneReady=chatEnabled; if(chatEnabled){nativeOutput=true;nativeSceneReady=true;} nativeInput.Clear();chat.CancelNative();WriteLog($"NATIVE_CHAT_ENABLED value={chatEnabled}"); }
         if(nativeChatEnabled)
         {
             ImGui.TextWrapped(nativeInput.Summary(clock.Elapsed.TotalSeconds,nativeChatSceneReady,chat.Busy));
             ImGui.TextWrapped(nativeInput.Status);
             ImGui.Checkbox("Show chat cooldown/status overlay",ref showChatStatus);
-            ImGui.TextWrapped("Local sent messages only; normal chat is still sent. Team incoming messages are not read yet. Up to one paid request per 8s.");
+            ImGui.TextWrapped("Local sent messages only; normal chat is still sent. Peer context is controlled in the main conversation panel. Up to one paid request per 8s.");
             if(ImGui.Button("Resume native chat input (in loaded save)")){nativeChatSceneReady=true;nativeOutput=true;nativeSceneReady=true;nativeInput.Clear();}
         }
         if (nativeOutput)
@@ -697,6 +695,7 @@ public sealed partial class ProbePlugin : IPlugin
                 if(!countEvasions)continue;
                 long before=contactEvasionDirector.LastCountedId;
                 contactEvasionDirector.Observe((ulong)player,weapon,candidate,clock.Elapsed.TotalSeconds,readyToSpeak:false);
+                if(contactEvasionDirector.LastCountedId!=before){RecordHunt("effective_evade",$"weapon={weapon}; scope={candidate.Scope}; one distinct evade with native contact/filter evidence",responseNow);}
                 if(contactEvasionDirector.LastCountedId!=before)WriteLog("EVASION_NATIVE_COUNT "+System.Text.Json.JsonSerializer.Serialize(new{weapon,candidate.EvasionId,candidate.Scope,count=contactEvasionDirector.Count,window_seconds=EvasionContactDirector.WindowSeconds(weapon),required=ResponseTuning.Thresholds.EvasionCount}));
             }
             // Collect while another line is playing; reset the batch only upon actual delivery.
@@ -816,11 +815,12 @@ public sealed partial class ProbePlugin : IPlugin
         var rolling=rollingOutput.Observe(ownerCounter,combatFacts,saedSettings,now);
         if(rolling!=null)
         {
+            RecordHunt("rolling_output",rolling.Mechanic,now);
             combatFeedback.Record(rolling);WriteLog("ROLLING_OUTPUT_VERDICT "+System.Text.Json.JsonSerializer.Serialize(rolling));
             if(!chat.Busy&&now>=actionQuietUntil){EventLine("rolling_output","damage","这一阵打得真起劲，本鱼给你加饭呦！",rolling.Mechanic+"。持续输出达到人工参考，不说真实DPS或完整面板。");expression.Offer("happy",.6f,1,now,3);actionQuietUntil=now+5;}
         }
         var result=combatVerdicts.Observe(ownerCounter,combatFacts,now);
-        if(result!=null){combatFeedback.Record(result);pendingSaedResult=result;WriteLog("COMBAT_DAMAGE_VERDICT "+System.Text.Json.JsonSerializer.Serialize(result));}
+        if(result!=null){RecordHunt("combat_"+result.Key,$"{result.Label}: damage estimate={result.Damage}; threshold={result.Threshold}; positive_verdict={result.Good}; source={result.DamageSource}; {result.Mechanic}",now);combatFeedback.Record(result);pendingSaedResult=result;WriteLog("COMBAT_DAMAGE_VERDICT "+System.Text.Json.JsonSerializer.Serialize(result));}
         if(now>=nextCounterLog){nextCounterLog=now+5;WriteLog("OWNER_DAMAGE_COUNTER "+System.Text.Json.JsonSerializer.Serialize(new{sample=ownerCounter,status=counterStatus,window=combatVerdicts.Status,equipment=combatFacts.Equipment,fields=combatFacts.Fields}));}
     }
     private void StopCombatFallback()
@@ -963,6 +963,7 @@ public sealed partial class ProbePlugin : IPlugin
     private void EventLine(string id,string category,string fallback,string facts)
     {
         double now=clock.Elapsed.TotalSeconds;
+        if(category is not ("monster" or "damage")&&id!="palico_recovered")RecordHunt(id,facts,now);
         if(!responses.Accept(id,category,fallback,"用当前外置人设说一句简短陪伴。仅评价给定事实，不编造主语、命中、来源或额外成功。",now,out var rule))return;
         string fixedText=string.IsNullOrWhiteSpace(rule.OfflineText)?fallback:rule.OfflineText;
         void Deliver(string line){responses.Record(id,line);LocalLine(line);}
@@ -1019,7 +1020,7 @@ public sealed partial class ProbePlugin : IPlugin
         ImGui.SetNextWindowBgAlpha(0.8f);
         ImGui.Begin("Whale companion subtitle", ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoInputs | ImGuiWindowFlags.NoFocusOnAppearing);
         if (font.NativePtr != null) ImGui.PushFont(font);
-        try { ImGui.TextWrapped(chat.LastLine); }
+        try { ImGui.TextWrapped(NativeDialogue.Format(chat.LastLine)); }
         finally { if (font.NativePtr != null) ImGui.PopFont(); ImGui.End(); }
     }
 
@@ -1048,12 +1049,12 @@ public sealed partial class ProbePlugin : IPlugin
         if(line==null)return;
         try
         {
-            if(SingletonManager.GetSingleton("sPlayer") is null)return;
+            if(!HasLoadedSave())return;
             var result=SharedSender(line.Text,false,out shareStatus);
             if(result==ChatSendResult.Submitted){sharedChat.Submitted(now);WriteLog($"SHARED_CHAT_SUBMITTED id={line.Id} utf8_bytes={System.Text.Encoding.UTF8.GetByteCount(line.Text)}");}
-            else if(result==ChatSendResult.Unavailable){shareEnabled=false;sharedChat.Clear();WriteLog("SHARED_CHAT_STOPPED status="+shareStatus);}
+            else if(result==ChatSendResult.Unavailable){nativeDialogue.Enqueue(line.Text,now);shareEnabled=false;sharedChat.Clear();WriteLog("SHARED_CHAT_STOPPED status="+shareStatus);}
         }
-        catch(Exception ex){shareEnabled=false;sharedChat.Clear();shareStatus="共享已停止："+ex.GetType().Name;WriteLog("SHARED_CHAT_STOPPED "+ex.GetType().Name);}
+        catch(Exception ex){nativeDialogue.Enqueue(line.Text,now);shareEnabled=false;sharedChat.Clear();shareStatus="共享已停止："+ex.GetType().Name;WriteLog("SHARED_CHAT_STOPPED "+ex.GetType().Name);}
     }
 
     private unsafe void RenderChatStatus()
@@ -1078,10 +1079,11 @@ public sealed partial class ProbePlugin : IPlugin
 
     private void FlushNativeDialogue()
     {
-        if (!nativeOutput) return;
+        if (!nativeOutput||shareEnabled||nativeDialogue.Count==0||clock.Elapsed.TotalSeconds<nextNativeDeliveryPoll) return;
+        nextNativeDeliveryPoll=clock.Elapsed.TotalSeconds+.1;
         try
         {
-            var ready = nativeSceneReady && SingletonManager.GetSingleton("sPlayer") is not null && SingletonManager.GetSingleton("sChat") is not null;
+            var ready = nativeSceneReady && HasLoadedSave() && SingletonManager.GetSingleton("sChat") is not null;
             if (!ready) nativeStatus = "Waiting for loaded save; resume native output after loading";
             var oldExpired=nativeDialogue.ExpiredCount;
             var line = nativeDialogue.Take(clock.Elapsed.TotalSeconds, ready);
