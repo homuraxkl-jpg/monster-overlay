@@ -1,0 +1,27 @@
+# Source checkpoint is staged by explicit whitelist, never git add .
+*
+!.gitignore
+!AGENTS.md
+!README.md
+!CURRENT-FEATURE-COVERAGE.md
+!THIRD-PARTY.md
+!LICENSE.MonsterOverlay.txt
+!NOTICE.MonsterOverlay.txt
+!src/
+!src/**
+!tools/
+!tools/**
+!release/
+!release/third-party/
+!release/third-party/*.txt
+!research/
+!research/monster-state/
+!research/monster-state/*-20261027*.json
+**/bin/
+**/obj/
+**/vendor/
+**/__pycache__/
+*.log
+*.dpapi
+**/config/
+private/
