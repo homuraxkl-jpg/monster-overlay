@@ -160,3 +160,6 @@ F9 → `Game output, multiplayer and memory` → 按需选择 `Export hunt conte
 玩家实测旧轮廓壳开关没有可见效果，不能将离线预览视为游戏通过。旧开关已标为 `Legacy outline shell (no visible effect confirmed)`，保留对照用途；原VRM的MToon参数不会自动成为MHW材质功能。旧生成器将新增网格绘制相关字段19改为0，这一语义未经原生验证，是候选原因，不是已定位的结论。
 
 新的研究路线为MHW的 `cpModelOutline` / `uOutlineFilter`。公开类型资料仅说明类型存在，没有证明常驻卡通描边可用。新版在首次启动后于后台自动生成一次 `config/research/native-outline-421810-v1.json`；也可 F9 → `Appearance` → `Capture native outline renderer (read only)` 重采。它只在421810版本通过OS保护读取主程序映像，按静态类名、DTI大小、getter指令和虚表关系定位，导出有限代码片段与RVA，不调用未知原生函数、不读取堆对象、不写内存、不增加hook、不读取聊天或密钥。扫描失败仅显示状态，不阻止游戏。该JSON仅供本机研究，不进入Git或发行包。此入口不产生任何新的描边效果；需要加载后的代码进一步确认渲染条件和控制字段。
+
+
+原生轮廓场景采样：进入存档后自动每5秒观察一次，共6次，保存 `config/research/native-outline-scene-0.json` 至 `-5.json`。只读检查现有原生轮廓实例的目标ID、颜色和深度模式，以及猫是否挂有对应组件。通过SPL已缓存的单例地址和OS保护读取遍历有界unit列表，不调用实体GetDti、不创建后处理器或写字段。无需武器诊断或战斗动作；没有加载存档就保持等待。猫来源不作主人归属认定；这些诊断不等于描边效果已经实现。

@@ -4,8 +4,26 @@ public partial class ProbePlugin
 {
     private int nativeOutlineCaptureBusy,nativeOutlineCaptureCompleted;
     private bool nativeOutlineAutoPending=true;
+    private double nextOutlineSceneCapture;
+    private int outlineSceneCaptures;
+    private void ObserveNativeOutlineScene()
+    {
+        if(weaponStateRevision!="421810"||outlineSceneCaptures>=6||clock.Elapsed.TotalSeconds<nextOutlineSceneCapture||!HasLoadedSave())return;
+        nextOutlineSceneCapture=clock.Elapsed.TotalSeconds+5;
+        try
+        {
+            var manager=(ulong)(SharpPluginLoader.Core.SingletonManager.GetSingleton("sMhUnit")?.Instance??0);
+            var report=NativeOutlineSceneProbe.Capture(localMemory,manager,gameModule,palicoHealthProbe.LatestHealth,clock.Elapsed.TotalSeconds,weaponStateRevision);
+            var directory=Path.Combine(CompanionChat.ConfigurationDirectory,"research");Directory.CreateDirectory(directory);
+            OfflineDialogue.AtomicWrite(Path.Combine(directory,"native-outline-scene-"+outlineSceneCaptures+".json"),System.Text.Json.JsonSerializer.Serialize(report,new System.Text.Json.JsonSerializerOptions{WriteIndented=true}));
+            outlineSceneCaptures++;
+            WriteLog($"NATIVE_OUTLINE_SCENE sample={outlineSceneCaptures} units={report.Units} filters={report.Filters.Length} cat_component={report.PalicoHasComponent} read_failures={report.ReadFailures}");
+        }
+        catch(Exception ex){WriteLog("NATIVE_OUTLINE_SCENE unavailable="+ex.GetType().Name);outlineSceneCaptures++;}
+    }
     private void MaybeCaptureNativeOutline()
     {
+        ObserveNativeOutlineScene();
         if(Interlocked.Exchange(ref nativeOutlineCaptureCompleted,0)!=0)WriteLog("NATIVE_OUTLINE_RESEARCH "+Volatile.Read(ref nativeOutlineCaptureStatus));
         if(!nativeOutlineAutoPending)return;nativeOutlineAutoPending=false;
         try{if(weaponStateRevision=="421810"&&!File.Exists(Path.Combine(CompanionChat.ConfigurationDirectory,"research","native-outline-421810-v1.json")))StartNativeOutlineCapture();}

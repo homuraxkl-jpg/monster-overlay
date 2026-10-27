@@ -678,6 +678,21 @@ Check(!ChatReadiness.IsReady(readyMemory,readyModule,"unknown")&&!ChatReadiness.
  BitConverter.GetBytes(image+0x2000).CopyTo(outlineData,0x40);Check(NativeOutlineLocator.Find(image,sections).Count==0,"non executable vtable method rejected");
  Check(NativeOutlineLocator.Find(image,Array.Empty<OutlineImageSection>()).Count==0,"missing image stays unknown");
 }
+// Typed read-only native filter state from a bounded synthetic unit list.
+{
+ var nm=new MemoryFixture();const ulong outlineModule=0x140000000,manager=0x300000,obj=0x400000,list=0x600000;
+ const ulong vt=outlineModule+0x1000,getter=outlineModule+0x2000,dti=outlineModule+0x3000,name=outlineModule+0x4000;
+ nm.Pointers[obj]=vt;nm.Pointers[vt+32]=getter;
+ var getterCode=new byte[]{0x48,0x8D,5,0,0,0,0,0xC3};BitConverter.GetBytes((int)(dti-getter-7)).CopyTo(getterCode,3);nm.Pointers[getter]=BitConverter.ToUInt64(getterCode);
+ nm.Values[dti+0x30]=0x270/4;nm.Pointers[dti+8]=name;
+ var className=new byte[16];System.Text.Encoding.ASCII.GetBytes("uOutlineFilter\0").CopyTo(className,0);nm.Pointers[name]=BitConverter.ToUInt64(className,0);nm.Pointers[name+8]=BitConverter.ToUInt64(className,8);
+ nm.Values[manager+0x3E38]=1;var array=manager+0x38+0xB8;nm.Values[array+8]=1;nm.Pointers[array+0x18]=list;nm.Pointers[list]=obj;
+ for(uint c=0;c<4;c++)nm.Float(obj+0x180+c*4,1);nm.Values[obj+0x190]=255;nm.Values[obj+0x194]=1;nm.Values[obj+0x1D0]=0;nm.Values[obj+0x1E4]=1;
+ var seen=NativeOutlineSceneProbe.Capture(nm,manager,outlineModule,null,1,"421810");Check(seen.Filters.Length==1&&seen.Units==1&&seen.Filters[0].TargetId==255&&seen.Filters[0].DepthTest,"native filter typed fields observed");
+ nm.Float(obj+0x180,float.NaN);Check(!NativeOutlineSceneProbe.TryFilter(nm,obj,outlineModule,0,out _),"invalid native color remains unknown");nm.Float(obj+0x180,1);
+ nm.Values[array+8]=2049;Check(NativeOutlineSceneProbe.Capture(nm,manager,outlineModule,null,1,"421810").ReadFailures==1,"native unit scan bounded");
+ int readsBefore=nm.Reads;Check(NativeOutlineSceneProbe.Capture(nm,manager,outlineModule,null,1,"other").Units==0&&nm.Reads==readsBefore,"unsupported revision never scans scene");
+}
 Console.WriteLine($"PASS {checks} weapon-state checks; no game/API calls");
 }
 catch(Exception ex){Console.Error.WriteLine("FAIL: "+ex.Message);Environment.ExitCode=1;}
