@@ -1,5 +1,16 @@
 using WhaleCompanion;
 using System.Text.Json;
+if(args.Length==2&&args[0]=="--export-public-defaults")
+{
+    var output=Path.GetFullPath(args[1]);if(Directory.Exists(output)&&Directory.EnumerateFileSystemEntries(output).Any())throw new InvalidDataException("Default export requires a fresh empty directory");Directory.CreateDirectory(output);
+    var defaults=new ResponsePolicy();defaults.Load(Path.Combine(output,"responses.json"));ResponseCatalog.Seed(defaults);defaults.Save();
+    File.WriteAllText(Path.Combine(output,"settings.json"),JsonSerializer.Serialize(new ChatSettings(),new JsonSerializerOptions{WriteIndented=true}));
+    File.WriteAllText(Path.Combine(output,"conversation.json"),JsonSerializer.Serialize(new ConversationOptions(),new JsonSerializerOptions{WriteIndented=true}));
+    File.WriteAllText(Path.Combine(output,"logging.json"),JsonSerializer.Serialize(new LogSettings(),new JsonSerializerOptions{WriteIndented=true}));
+    File.WriteAllText(Path.Combine(output,"appearance.json"),"{\"ShowHeadPot\":false,\"ShowOutline\":false}");
+    File.WriteAllText(Path.Combine(output,"persona.md"),ChatConfiguration.Default.Persona);
+    Console.WriteLine("Exported public defaults from source only; no user configuration read");return;
+}
 int checks=0;
 void Check(bool value,string label){if(!value)throw new Exception(label);checks++;}
 var dir=Path.Combine(Path.GetTempPath(),"whale-response-check-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(dir);
@@ -63,6 +74,8 @@ try
     }
     var emptyExport=ContextExport.Write(Path.Combine(dir,"out"),"null","[]",Array.Empty<ChatMessage>(),Array.Empty<string>());
     Check(emptyExport!=exportPath,"successive exports preserve existing archives");
+    Check(!ReleaseProfile.ResearchExportsEnabled&&!ReleaseProfile.ModelOutlineEnabled,"release research and outline disabled");
+    Check(!LogSettings.Keep("FACE_STATE sample",false)&&LogSettings.Keep("NATIVE_DISPLAY_STOPPED",false)&&LogSettings.Keep("FACE_STATE sample",true),"compact logs keep failures; details opt in");
     Console.WriteLine($"PASS {checks} response/config/language checks; no game or API requests");
 }
 finally{ResponseTuning.Current=new();Directory.Delete(dir,true);}

@@ -1,4 +1,4 @@
-using SharpPluginLoader.Core.Networking;
+﻿using SharpPluginLoader.Core.Networking;
 using ImGuiNET;
 using SharpPluginLoader.Core.Components;
 using SharpPluginLoader.Core;
@@ -59,7 +59,7 @@ public sealed partial class ProbePlugin : IPlugin
     private string nativeStatus = "Native output disabled";
     private readonly CompanionExpression expression = new();
     private readonly FaceMeshExecutor face = new();
-    private bool showHeadPot = false,showOutline=false;
+    private bool showHeadPot = false;
     private string appearanceStatus = "";
     private static string AppearancePath => Path.Combine(CompanionChat.ConfigurationDirectory, "appearance.json");
     private bool animatedFace = true, slowFacePreview;
@@ -154,6 +154,7 @@ public sealed partial class ProbePlugin : IPlugin
 
     public void OnLoad()
     {
+        try{logSettings=LogSettings.Load(Path.Combine(CompanionChat.ConfigurationDirectory,"logging.json"));}catch{logSettings=new();}
         WriteLog("P11.5 response interface + native output, multiplayer and observed context 2026-10-27");
         try{gameModule=(ulong)(System.Diagnostics.Process.GetCurrentProcess().MainModule?.BaseAddress??0);}catch{gameModule=0;}
         UiLanguage.Load(Path.Combine(CompanionChat.ConfigurationDirectory,"ui-language.txt"));
@@ -166,7 +167,7 @@ public sealed partial class ProbePlugin : IPlugin
         try
         {
             var armPath=Path.Combine(CompanionChat.ConfigurationDirectory,"palico-resource-probe.once");
-            if(File.Exists(armPath)&&File.ReadAllText(armPath).Trim()=="read-only-180s-v1")
+            if(ReleaseProfile.ResearchExportsEnabled&&File.Exists(armPath)&&File.ReadAllText(armPath).Trim()=="read-only-180s-v1")
             {
                 File.Delete(armPath);palicoCapture.Start(clock.Elapsed.TotalSeconds);
                 palicoResourceStatus="本次启动已自动开启180秒只读资源诊断";
@@ -186,9 +187,9 @@ public sealed partial class ProbePlugin : IPlugin
         };
         chat.NativeTrace += detail => WriteLog("NATIVE_CHAT_RESPONSE "+detail);
 
-        try { var appearance=AppearanceSettings.Load(AppearancePath);showHeadPot=appearance.ShowHeadPot;showOutline=appearance.ShowOutline; }
+        try { var appearance=AppearanceSettings.Load(AppearancePath);showHeadPot=appearance.ShowHeadPot; }
         catch { appearanceStatus = "Invalid appearance.json; default no-pot appearance retained"; }
-        face.SetPotVisible(showHeadPot);face.SetOutlineVisible(showOutline);
+        face.SetPotVisible(showHeadPot);face.SetOutlineVisible(false);
         face.Initialize(WriteLog);
         chat.ReplyReceived += reply => { expression.Offer(reply.Emotion, reply.Intensity, 1, clock.Elapsed.TotalSeconds); WriteLog($"FACE_AI emotion={reply.Emotion} intensity={reply.Intensity:0.00}"); lineUntil = clock.Elapsed.TotalSeconds + 8; actionQuietUntil = lineUntil; };
         chat.ConversationReset += () => { observedConversation.Clear();chat.UpdateObservationContext("");sharedChat.Clear();ClearPeerChat(false); nativeChatEpoch++; nativeInput.Clear(); nativeDialogue.Clear(); nativeDeliveredId=-1; expression.Reset(clock.Elapsed.TotalSeconds); };
@@ -202,7 +203,6 @@ public sealed partial class ProbePlugin : IPlugin
 
     public void OnUpdate(float deltaTime)
     {
-        MaybeCaptureNativeOutline();
         if(enabled&&!scenePaused&&weaponStateDiagnostic)
         {
             while(palicoHealthProbe.TryTypeDetail(out var typeDetail))WriteLog("PALICO_TYPE_DIAGNOSTIC "+typeDetail);
@@ -459,7 +459,9 @@ public sealed partial class ProbePlugin : IPlugin
         ImGui.TextWrapped(teamProbe.Summary(clock.Elapsed.TotalSeconds));
         ImGui.TextWrapped("DIAGNOSTIC ONLY: no AI replies. Send the exact WHALE marker strings below, not ordinary chat. Native AI input is a separate paid checkbox.");
         ImGui.TextWrapped("Owner: WHALE-OWNER-A1; friend: WHALE-PEER-B1; friend: WHALE-OWNER-A1; owner: WHALE-PEER-B1; friend: WHALE-PEER-B2.");
-        ImGui.TextUnformatted("Whale Companion P10 - companion and state diagnostics");
+        bool detailed=logSettings.Detailed;
+        if(ImGui.Checkbox("Detailed diagnostic logging (local only)",ref detailed)){logSettings=logSettings with{Detailed=detailed};try{OfflineDialogue.AtomicWrite(Path.Combine(CompanionChat.ConfigurationDirectory,"logging.json"),System.Text.Json.JsonSerializer.Serialize(logSettings));}catch{}}
+        ImGui.TextUnformatted("Whale Companion P11.5 RC1 - diagnostics");
         ImGui.TextUnformatted($"Expression intent: {expression.Emotion} {expression.Weight:0.00} | blink {expression.Blink:0.00}");
         ImGui.TextWrapped(face.Status);
         ImGui.TextUnformatted($"Face group: {selectedFaceGroup} | {facePlayback.Emotion} {facePlayback.Weight:0.000} | eyelids {facePlayback.Blink:0.000} | native queries: {face.Queries}");
@@ -709,7 +711,7 @@ public sealed partial class ProbePlugin : IPlugin
         var researchOutcome=Interlocked.Exchange(ref evasionResearchOutcome,null);if(researchOutcome!=null)WriteLog("EVASION_CODE_RESEARCH "+researchOutcome);
         if(!weaponStateDiagnostic){lastEvasionFlagA=lastEvasionFlagB=null;recentEvasionScope=null;evasionDirector.Reset();previousEvasionTimer=null;guardSample=null;guardDirector.Reset();return;}
         var now=clock.Elapsed.TotalSeconds;
-        if(!evasionActionExports.ContainsKey(weapon)&&evasionActionAttempts.GetValueOrDefault(weapon)<3&&now>=nextEvasionActionAttempt&&Interlocked.CompareExchange(ref evasionActionBusy,1,0)==0)
+        if(ReleaseProfile.ResearchExportsEnabled&&!evasionActionExports.ContainsKey(weapon)&&evasionActionAttempts.GetValueOrDefault(weapon)<3&&now>=nextEvasionActionAttempt&&Interlocked.CompareExchange(ref evasionActionBusy,1,0)==0)
         {
             nextEvasionActionAttempt=now+5;evasionActionAttempts.AddOrUpdate(weapon,1,(_,count)=>count+1);
             var directory=Path.Combine(CompanionChat.ConfigurationDirectory,"combat-feedback");var revision=weaponStateRevision;var actionOwner=(ulong)player;var actionWeapon=weapon;
@@ -719,7 +721,7 @@ public sealed partial class ProbePlugin : IPlugin
                 catch(Exception ex){Interlocked.Exchange(ref evasionResearchOutcome,"action_export_failed_"+ex.GetType().Name);}
                 finally{Volatile.Write(ref evasionActionBusy,0);}
             });
-        }        if(Interlocked.CompareExchange(ref evasionResearchQueued,1,0)==0)
+        }        if(ReleaseProfile.ResearchExportsEnabled&&Interlocked.CompareExchange(ref evasionResearchQueued,1,0)==0)
         {
             var directory=Path.Combine(CompanionChat.ConfigurationDirectory,"combat-feedback");var revision=weaponStateRevision;
             _=System.Threading.Tasks.Task.Run(()=>{try{EvasionCodeResearch.Export(directory,revision);Interlocked.Exchange(ref evasionResearchOutcome,"saved_dispatch_context_candidates");}catch(Exception ex){Interlocked.Exchange(ref evasionResearchOutcome,"failed_"+ex.GetType().Name);}});
@@ -1125,9 +1127,12 @@ public sealed partial class ProbePlugin : IPlugin
         WriteLog($"PALICO_BATTLE_MARK kind={kind} observation=user_report time={clock.Elapsed.TotalSeconds:0.000} "+System.Text.Json.JsonSerializer.Serialize(battleCapture.Stats(clock.Elapsed.TotalSeconds)));
         battleStatus="已记录刚看到的台词类别："+kind+"（这是手动标记，不代表自动识别成功）";
     }
+    private readonly object logGate=new();
+    private LogSettings logSettings=new();
     private void WriteLog(string message)
     {
-        try { File.AppendAllText(logPath, $"{DateTimeOffset.Now:O} {message}{Environment.NewLine}"); }
+        if(!LogSettings.Keep(message,logSettings.Detailed))return;
+        try { lock(logGate){if(File.Exists(logPath)&&new FileInfo(logPath).Length>logSettings.MaxBytes)File.Move(logPath,logPath+".previous",true);File.AppendAllText(logPath, $"{DateTimeOffset.Now:O} {message}{Environment.NewLine}");} }
         catch (IOException) { }
         catch (UnauthorizedAccessException) { }
     }

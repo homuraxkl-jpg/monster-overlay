@@ -55,3 +55,8 @@ private/
 
 /out/
 **/out/
+
+!release/package/
+!release/package/*.md
+!release/package/*.ps1
+!release/package/*.cmd

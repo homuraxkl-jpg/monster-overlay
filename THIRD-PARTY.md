@@ -2,7 +2,7 @@
 
 - SharpPluginLoader：Fexty12573，https://github.com/Fexty12573/SharpPluginLoader ，现用插件框架。
 - 武器动作表：AniBullet Wiki，数据提取者Fexty，https://github.com/AniBullet/MonsterHunterWorldModding/wiki/Player-Weapon-Action-IDs ，研究数据；未据此假定任意数据可自由再分发。
-- MHW Model Editor：chikichikibangbang，基于NSACloud/RE-Mesh-Editor，https://github.com/chikichikibangbang/MHW_Model_Editor ，GPL-3.0-or-later（见下载源码LICENSE.GPL与manifest）。源码zip及解压目录位于tools/vendor，许可证保留。当前下载评估，尚未安装/执行该插件。
+- MHW Model Editor：chikichikibangbang，基于NSACloud/RE-Mesh-Editor，https://github.com/chikichikibangbang/MHW_Model_Editor ，GPL-3.0-or-later（见下载源码LICENSE.GPL与manifest）。源码zip及解压目录位于tools/vendor，许可证保留。已用于离线模型转换与材质资源生成；工具本体不随模组分发，也未编入运行插件。
 - VRM Add-on for Blender：saturday06，https://github.com/saturday06/VRM-Addon-for-Blender ，候选VRM专用工具，仓库含MIT与GPL许可，具体使用组件需核对文件级许可；尚未下载。
 - MHW-FreeKinetics：Dimcirui移植，原作者AsteriskAmpersand，https://github.com/Dimcirui/MHW-FreeKinetics ，候选动画工具；尚未下载及核实全文许可，尚未复用代码。要求Blender4.3/4.4，不支持5.x。
 
@@ -50,3 +50,6 @@ P11.5单人备用：复用既有MAS/mhw-toolkit九参数显示观察器与Hunter
 
 
 2026-10-27原生聊天就绪检测：沿用上述MAS/mhw-toolkit World 421810 PLAYER_BASE(+0x50139A0)及+0x50玩家链参考，以本项目保护性OS读取实现；已采样玩家作为备用，不在菜单中新增FindMasterPlayer/GetDti原生调用。近期对话/狩猎上下文与计数概览为本项目实现，未引入第三方记忆插件或新增外部服务。
+
+## 发布候选资产授权（2026-10-27）
+维护者确认已获得木子恶魔《蓝色小肥鱼Deepseek》转换后模型及贴图的公开发布授权。原始VRM不随包分发；此确认不扩大模型对第三人的再分发或改作许可。SharpPluginLoader仅为外部前置，其MIT通知随包保留。

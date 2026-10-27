@@ -17,6 +17,8 @@ if(Test-Path -LiteralPath $statePath){$state=Get-Content -LiteralPath $statePath
 $exists=Test-Path -LiteralPath $target
 $simplifiedDefaultHash='F303990B641940D01CF3C2C2D4B1458A41A250B1B5EA16740372F54CE42C2C37'
 $expected=if($state){$state.InstalledHash}elseif($Language -eq 'chT'){$baselineHash}elseif($exists -and (Get-FileHash -LiteralPath $target).Hash -eq $simplifiedDefaultHash){$simplifiedDefaultHash}else{$null}
+$publicDefault=Join-Path $config ('defaults\'+$file)
+if(!$state -and $exists -and (Test-Path -LiteralPath $publicDefault) -and (Get-FileHash -LiteralPath $target).Hash -eq (Get-FileHash -LiteralPath $publicDefault).Hash){$expected=(Get-FileHash -LiteralPath $publicDefault).Hash}
 if(($expected -and (!$exists -or (Get-FileHash -LiteralPath $target).Hash -ne $expected)) -or (!$expected -and $exists)){throw '游戏台词文件被其他工具修改，已停止应用以保留原文件。'}
 if($Restore){
  if(!$state){throw '没有需要恢复的台词备份。'}

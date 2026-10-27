@@ -40,21 +40,15 @@ public partial class ProbePlugin
     {
         if(!ImGui.CollapsingHeader(UiLanguage.Text("Appearance","外观","外觀")))return;
         if(ImGui.Checkbox(UiLanguage.Text("Show head pot","显示头顶铁盆","顯示頭頂鐵盆"),ref showHeadPot))SaveAppearance();
-        if(!face.OutlineAvailable || !face.Ready)ImGui.BeginDisabled();
-        if(ImGui.Checkbox(UiLanguage.Text("Legacy outline shell (no visible effect confirmed)","旧轮廓壳（实测未见效果）","舊輪廓殼（實測未見效果）"),ref showOutline))SaveAppearance();
-        if(!face.OutlineAvailable || !face.Ready)ImGui.EndDisabled();
         ImGui.TextWrapped("Face tint: "+face.FaceTint);
-        ImGui.TextWrapped(UiLanguage.Text("Face tint presets require closing the game and running Install-OptionalAppearance.ps1 -Tint original / soft-rosy / rosy. Outline is experimental and defaults OFF.","脸部调色需退出游戏后运行 Install-OptionalAppearance.ps1 -Tint original / soft-rosy / rosy。描边为实验选项，默认关闭。","臉部調色需退出遊戲後執行 Install-OptionalAppearance.ps1 -Tint original / soft-rosy / rosy。描邊為實驗選項，預設關閉。"));
-        if(!face.OutlineAvailable || !face.Ready)ImGui.TextWrapped("Outline asset is not installed; existing appearance retained.");
-        if(ImGui.Button("Capture native outline renderer (read only)"))StartNativeOutlineCapture();
-        ImGui.TextWrapped(Volatile.Read(ref nativeOutlineCaptureStatus));
-        ImGui.TextWrapped("Native component route is research only; no effect or game memory writes enabled.");
+        ImGui.TextWrapped(UiLanguage.Text("Model outline is deferred for player feedback; research is disabled in this release.","模型描边留待玩家反馈后处理；本候选关闭相关研究。","模型描邊留待玩家回饋後處理；本候選關閉相關研究。"));
+        ImGui.TextWrapped(UiLanguage.Text("Face tint: close the game, then run Install.ps1 -FaceTint original / soft-rosy / rosy from the release package.","脸部调色：退出游戏后运行发布包的 Install.ps1 -FaceTint original / soft-rosy / rosy。","臉部調色：退出遊戲後執行發佈包的 Install.ps1 -FaceTint original / soft-rosy / rosy。"));
         ImGui.TextWrapped(appearanceStatus);
     }
     private void SaveAppearance()
     {
-        face.SetPotVisible(showHeadPot);face.SetOutlineVisible(showOutline);
-        try{new AppearanceSettings{ShowHeadPot=showHeadPot,ShowOutline=showOutline}.Save(AppearancePath);appearanceStatus="Appearance saved";}
+        face.SetPotVisible(showHeadPot);face.SetOutlineVisible(false);
+        try{new AppearanceSettings{ShowHeadPot=showHeadPot,ShowOutline=false}.Save(AppearancePath);appearanceStatus="Appearance saved";}
         catch{appearanceStatus="Applied for this session; could not save appearance";}
     }
 }

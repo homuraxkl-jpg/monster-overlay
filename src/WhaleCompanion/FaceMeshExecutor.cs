@@ -42,8 +42,8 @@ public sealed class FaceMeshExecutor : IDisposable
             { Status = "Face model not installed; neutral model retained"; log(Status); return; }
             var material = Path.ChangeExtension(model, ".mrl3");
             var materialHash=File.Exists(material)?Hash(material):"";
-            FaceTint=materialHash==MaterialHash?"Original":OutlineSelection.Tint(materialHash);
-            if (OutlineAvailable ? OutlineSelection.Tint(materialHash)=="Unknown" : materialHash!=MaterialHash)
+            FaceTint=materialHash==MaterialHash?"Original":materialHash=="5DB28C6B42A8BA32F8DCBBE3F46191F56B869B4E45450D7882AFB215F76B13FC"?"Soft rosy":materialHash=="E2C0C395169296B32FF9E16E59C471B879024486708D181E2091D8C7C84A4157"?"Rosy":OutlineSelection.Tint(materialHash);
+            if (OutlineAvailable ? OutlineSelection.Tint(materialHash)=="Unknown" : materialHash!=MaterialHash&&FaceTint=="Unknown")
             { Status = "Face material mismatch; neutral fallback"; RestoreNeutral(game, model, log); log(Status); return; }
             var matches = PatternScanner.Scan(Signature);
             if (matches.Count != 1)
