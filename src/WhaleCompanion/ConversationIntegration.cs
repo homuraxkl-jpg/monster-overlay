@@ -79,6 +79,27 @@ public sealed partial class ProbePlugin
         if(chat.StartNative("根据近期新的只读狩猎观察，判断是否值得补一句主动陪伴；无新信息或刚说过则沉默。",()=>conversationOptions.ProactiveHuntComments&&responses.Settings.DynamicAi&&autoCompanion&&session==currentSession&&clock.Elapsed.TotalSeconds-now<20,"hunt"))
         {lastProactiveVersion=version;nextProactiveRequest=now+conversationOptions.ProactiveIntervalSeconds;}
     }
+    private bool exportHunt=true,exportChat=true,exportMemory=true;
+    private string exportStatus="";
+    private void RenderContextExport()
+    {
+        ImGui.Separator();
+        ImGui.Checkbox(UiLanguage.Text("Export hunt context","导出狩猎上下文","匯出狩獵上下文"),ref exportHunt);
+        ImGui.Checkbox(UiLanguage.Text("Export recent dialogue","导出近期对话","匯出近期對話"),ref exportChat);
+        ImGui.Checkbox(UiLanguage.Text("Export confirmed memories","导出已确认记忆","匯出已確認記憶"),ref exportMemory);
+        if(ImGui.Button(UiLanguage.Text("Export selected context to out","将选中上下文压缩导出到out","將選取上下文壓縮匯出到out")))
+        {
+            try
+            {
+                var now=clock.Elapsed.TotalSeconds;
+                var hunt=exportHunt?JsonSerializer.Serialize(new{summary=huntLedger.Snapshot(),recent=JsonSerializer.Deserialize<JsonElement>(huntContext.Snapshot(now,48000))}):"null";
+                var destination=ContextExport.Write(Path.Combine(Path.GetDirectoryName(CompanionChat.ConfigurationDirectory)!,"out"),hunt,exportChat?observedConversation.Snapshot(now,48000):"[]",exportChat?chat.ExportRecentChat():Array.Empty<ChatMessage>(),exportMemory?chat.ExportConfirmedMemory():Array.Empty<string>());
+                exportStatus="Local export saved: "+destination;
+            }
+            catch{exportStatus="Export failed; no upload performed. Check output directory access.";}
+        }
+        ImGui.TextWrapped(exportStatus);
+    }
     private void RenderConversationControls()
     {
         if(!ImGui.CollapsingHeader(UiLanguage.Text("Game output, multiplayer and memory","游戏输出、联机与记忆","遊戲輸出、連線與記憶")))return;
@@ -107,5 +128,6 @@ public sealed partial class ProbePlugin
         ImGui.TextWrapped($"{SharedChat.Prefix} | hunt observations: {huntContext.Count} | observed chat: {observedConversation.Count}");
         ImGui.TextWrapped(deliveryStatus);if(conversationOptions.Multiplayer)ImGui.TextWrapped(shareStatus);
         ImGui.TextWrapped(conversationOptionStatus);
+        RenderContextExport();
     }
 }

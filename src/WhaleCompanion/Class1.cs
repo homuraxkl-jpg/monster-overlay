@@ -1,4 +1,4 @@
-﻿using SharpPluginLoader.Core.Networking;
+using SharpPluginLoader.Core.Networking;
 using ImGuiNET;
 using SharpPluginLoader.Core.Components;
 using SharpPluginLoader.Core;
@@ -969,7 +969,7 @@ public sealed partial class ProbePlugin : IPlugin
         void Deliver(string line){responses.Record(id,line);LocalLine(line);}
         if(!responses.Settings.DynamicAi){Deliver(fixedText);return;}
         int epoch=session;string currentWeapon=weapon;
-        var prompt=$"状态事件键：{id}。外置事件话术要求：{rule.Prompt}\n只读事实与不可跨越的边界：{facts}\n离线措辞参考（可随人设改写）：{fixedText}\n只回复一句角色对白，保持指定JSON回复格式。{UiLanguage.OutputInstruction}";
+        var prompt=$"状态事件键：{id}。外置事件话术要求：{rule.Prompt}\n只读事实与不可跨越的边界：{facts}\n离线措辞参考（可随人设改写）：{fixedText}\n只回复一句角色对白，保持指定JSON回复格式。";
         if(!chat.StartDynamicEvent(prompt,()=>responses.IsEnabled(id)&&responses.Settings.DynamicAi&&enabled&&!scenePaused&&autoCompanion&&epoch==session&&clock.Elapsed.TotalSeconds-now<=12&&(category!="weapon"&&category!="damage"||weapon==currentWeapon),line=>Deliver(string.IsNullOrWhiteSpace(line)?fixedText:line)))Deliver(fixedText);
     }
     private void LocalLine(string text)

@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -7,6 +7,8 @@ namespace WhaleCompanion;
 public record ChatMessage(string role, string content);
 public sealed record ChatSettings
 {
+    public string ReplyLanguage {get;init;}="auto";
+    public static string LanguageInstruction(string language)=>language switch {"chS"=>"使用简体中文回复。","chT"=>"使用繁體中文回覆。","eng"=>"Reply in English.",_=>"Follow the local user recent language or persona preferred dialogue language; do not choose based on interface language, internal event prompts or peer quotes."};
     public string Endpoint {get;init;}="https://api.deepseek.com/chat/completions";
     public string Model { get; init; } = "deepseek-flash";
     public string NativeChatModel { get; init; } = "deepseek-flash";
@@ -16,6 +18,7 @@ public sealed record ChatSettings
     public int MaxReplyTokens { get; init; } = 240;
     public void Validate()
     {
+        if(ReplyLanguage is not ("auto" or "chS" or "chT" or "eng"))throw new InvalidDataException("Invalid reply language");
         if(!Uri.TryCreate(Endpoint,UriKind.Absolute,out var endpoint)||endpoint.Scheme is not ("https" or "http")||!string.IsNullOrEmpty(endpoint.UserInfo))throw new InvalidDataException("Invalid API endpoint");
         if (string.IsNullOrWhiteSpace(Model) || Model.Length > 128 || Model.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not ('-' or '_' or '.' or '/' or ':'))) throw new InvalidDataException("Invalid model");
         if (string.IsNullOrWhiteSpace(NativeChatModel) || NativeChatModel.Length > 128 || NativeChatModel.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not ('-' or '_' or '.' or '/' or ':'))) throw new InvalidDataException("Invalid native chat model");
@@ -48,7 +51,7 @@ public sealed record ChatConfiguration(ChatSettings Settings, string Persona, st
     public const string ReplyFormatInstruction = "只输出JSON对象，例如{\"text\":\"我陪着你。\",\"emotion\":\"relaxed\",\"intensity\":0.5}。text是非空对白，不用Markdown或工具标记；emotion只能为neutral、happy、sad、angry、relaxed、concerned；intensity为0到1。";
     public string SystemPrompt(string gameContext, string savedMemory = "", string? outputContract = null) => "你是陪伴怪物猎人世界玩家的鲸鱼娘。\n角色资料（仅决定对白风格）：\n" + Persona +
         "\n用户维护的长期资料：\n" + Memory + "\n玩家确认并保存的跨对话资料：\n" + savedMemory + "\n请求时只读探针快照：\n" + gameContext +
-        "\n长期记忆只能由玩家在面板确认保存，你不能自行写入，不要声称已永久保存未确认的内容。你目前只能聊天和显示情绪表情，不能看到游戏画面或使用其他工具。不要编造玩家动作、命中、反击成功或未记录的往事；不知道就直说。用简短中文回复，最多三句话。" + (outputContract ?? ReplyFormatInstruction);
+        "\n长期记忆只能由玩家在面板确认保存，你不能自行写入，不要声称已永久保存未确认的内容。你目前只能聊天和显示情绪表情，不能看到游戏画面或使用其他工具。不要编造玩家动作、命中、反击成功或未记录的往事；不知道就直说。按用户与人设指定的语言简短回复，最多三句话。" + (outputContract ?? ReplyFormatInstruction);
 
     public List<ChatMessage> BuildMessages(IReadOnlyList<ChatMessage> history, string input, string gameContext, string savedMemory = "", string? outputContract = null, string peerContext = "")
     {

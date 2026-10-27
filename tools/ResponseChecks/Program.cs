@@ -51,6 +51,18 @@ try
     Check(NativeDialogue.Format("【大肥鱼】hello")=="【大肥鱼】hello"&&SharedChat.Format("【大肥鱼】hello")=="【大肥鱼】hello","visible prefix appears exactly once in both routes");
     var options=new ConversationOptions();Check(options.OutputMode=="native"&&!options.Multiplayer&&options.NativeChat,"native local display and chat default; multiplayer remains explicit");
     var optionsPath=Path.Combine(dir,"conversation.json");options.Multiplayer=true;options.Save(optionsPath);Check(ConversationOptions.Load(optionsPath).Multiplayer,"multiplayer preference persists");
+    Check(ChatSettings.LanguageInstruction("eng")=="Reply in English.","explicit reply language");
+    Check(ChatSettings.LanguageInstruction("auto").Contains("persona"),"reply language follows persona independent of UI");
+    var exportPath=ContextExport.Write(Path.Combine(dir,"out"),"null","[]",new[]{new ChatMessage("user","hello sk-abcdefghijklmnopqrstuvwx")},new[]{"confirmed synthetic fact"});
+    using(var archive=System.IO.Compression.ZipFile.OpenRead(exportPath))
+    {
+        Check(archive.Entries.Select(x=>x.FullName).Order(StringComparer.Ordinal).SequenceEqual(new[]{"README.txt","context.json","summary.md"}),"export archives only allowlisted generated files");
+        using var reader=new StreamReader(archive.GetEntry("context.json")!.Open());var exported=reader.ReadToEnd();
+        Check(!exported.Contains("sk-abcdefghijkl")&&exported.Contains("credential removed"),"credential-shaped conversation text redacted");
+        using var parsed=JsonDocument.Parse(exported);Check(parsed.RootElement.GetProperty("confirmed_memory").GetArrayLength()==1,"selected confirmed memory exported");
+    }
+    var emptyExport=ContextExport.Write(Path.Combine(dir,"out"),"null","[]",Array.Empty<ChatMessage>(),Array.Empty<string>());
+    Check(emptyExport!=exportPath,"successive exports preserve existing archives");
     Console.WriteLine($"PASS {checks} response/config/language checks; no game or API requests");
 }
 finally{ResponseTuning.Current=new();Directory.Delete(dir,true);}

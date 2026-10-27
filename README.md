@@ -1,4 +1,4 @@
-﻿# 大肥鱼 AI 艾露猫陪伴模组
+# 大肥鱼 AI 艾露猫陪伴模组
 
 目标环境为 Windows x64、Steam《怪物猎人：世界／冰原》421810／15.23。尚未承诺其他版本、Proton 或所有模组组合兼容。
 
@@ -141,3 +141,9 @@ SharpPluginLoader 是本C#插件的直接前置。Stracker's Loader、Performanc
 - 在 `Cross-conversation memory` 中启用 `Use saved memories in AI requests`，可从最近主人输入拟定或手工填写事实，再 `Save memory`。支持编辑/删除/清空；没有用户保存就不自动写永久记忆。手工 `memory.md` 与确认记忆 `saved-memories.json` 是分开的。
 
 `conversation.json` 还可调 NativeChatCooldownSeconds（默认8秒）与 ProactiveIntervalSeconds（默认45秒）。主动判断可以用你选择的轻量模型，保留上下文、偶尔不回话是预期行为；不把“保持沉默”误判为“没有读到”。
+
+### 私人上下文导出与对白语言
+
+F9 → `Game output, multiplayer and memory` → 按需选择 `Export hunt context`、`Export recent dialogue`、`Export confirmed memories`，点击 `Export selected context to out`。只在点击时生成本机 ZIP，位置为 `nativePC/plugins/CSharp/WhaleCompanion/out/`；每次独立命名，不覆盖旧包，不自动上传。ZIP 包含 `summary.md`（最近对话压缩摘要）、`context.json`（所选详细资料）和说明。可以把摘要交给你自己的“大肥鱼”，需要细节时再给 JSON。这是确定性整理与 ZIP 压缩，不调用 AI；观察记录保留历史与来源限制，不代表当前战况。近期聊天与观察受现有容量/时限限制，不是全部历史记录；已确认记忆仅导出确认文本，不导出原始引用、人设、API配置或密钥文件。常见凭据形态会脱敏，但压缩包仍含你选择的私人内容，请自行保管。`out` 已排除在 Git 和公开发布白名单之外。
+
+`AI model and persona` 中的 `Reply language` 独立于界面语言；默认 `Follow persona / local user`，也可指定简体、繁体或英文。离线固定台词不会因这个选项自动翻译。
