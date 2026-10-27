@@ -163,3 +163,8 @@ F9 → `Game output, multiplayer and memory` → 按需选择 `Export hunt conte
 
 
 原生轮廓场景采样：进入存档后自动每5秒观察一次，共6次，保存 `config/research/native-outline-scene-0.json` 至 `-5.json`。只读检查现有原生轮廓实例的目标ID、颜色和深度模式，以及猫是否挂有对应组件。通过SPL已缓存的单例地址和OS保护读取遍历有界unit列表，不调用实体GetDti、不创建后处理器或写字段。无需武器诊断或战斗动作；没有加载存档就保持等待。猫来源不作主人归属认定；这些诊断不等于描边效果已经实现。
+
+
+场景探针修订：首轮六次“0 units”不能证明没有轮廓实例；原实现只读了SDK中的临时MtArray。v2改用SDK明确的活动链表 `MoveLine.Top(+48h) → Unit.Next(+30h)`，以行号、链头、计数复核，并限制总数、每行节点和循环；结果另存 `native-outline-scene-v2-0.json` 至 `-5.json`，保留旧记录。无需武器诊断。
+
+描边配色目标（用户指定，尚未实现）：采用对应纹理色，略增饱和度、略降亮度，避免统一纯黑。原生uOutlineFilter当前可见接口为整体RGBA，不能将它宣称为逐纹理着色已实现；实现时需评估逐材质区分或其他着色路径，不改原纹理/原VRM。

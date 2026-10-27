@@ -15,9 +15,9 @@ public partial class ProbePlugin
             var manager=(ulong)(SharpPluginLoader.Core.SingletonManager.GetSingleton("sMhUnit")?.Instance??0);
             var report=NativeOutlineSceneProbe.Capture(localMemory,manager,gameModule,palicoHealthProbe.LatestHealth,clock.Elapsed.TotalSeconds,weaponStateRevision);
             var directory=Path.Combine(CompanionChat.ConfigurationDirectory,"research");Directory.CreateDirectory(directory);
-            OfflineDialogue.AtomicWrite(Path.Combine(directory,"native-outline-scene-"+outlineSceneCaptures+".json"),System.Text.Json.JsonSerializer.Serialize(report,new System.Text.Json.JsonSerializerOptions{WriteIndented=true}));
+            OfflineDialogue.AtomicWrite(Path.Combine(directory,"native-outline-scene-v2-"+outlineSceneCaptures+".json"),System.Text.Json.JsonSerializer.Serialize(report,new System.Text.Json.JsonSerializerOptions{WriteIndented=true}));
             outlineSceneCaptures++;
-            WriteLog($"NATIVE_OUTLINE_SCENE sample={outlineSceneCaptures} units={report.Units} filters={report.Filters.Length} cat_component={report.PalicoHasComponent} read_failures={report.ReadFailures}");
+            WriteLog($"NATIVE_OUTLINE_SCENE_V2 sample={outlineSceneCaptures} units={report.Units} filters={report.Filters.Length} cat_component={report.PalicoHasComponent} read_failures={report.ReadFailures}");
         }
         catch(Exception ex){WriteLog("NATIVE_OUTLINE_SCENE unavailable="+ex.GetType().Name);outlineSceneCaptures++;}
     }

@@ -1,6 +1,7 @@
 namespace WhaleCompanion;
 public sealed record NativeOutlineFilterState(int Line,int TargetId,int SampleType,int Markers,float Red,float Green,float Blue,float Alpha,bool DepthTest);
-public sealed record NativeOutlineSceneState(int Lines,int Units,int ReadFailures,NativeOutlineFilterState[] Filters,bool? PalicoHasComponent,int? PalicoFlag,string Note);
+public sealed record NativeOutlineSceneState(int Lines,int Units,int ReadFailures,NativeOutlineFilterState[] Filters,bool? PalicoHasComponent,int? PalicoFlag,string Note)
+{public string Route {get;init;}="MoveLine.Top+48/Unit.Next+30; active linked list";}
 // SPL UnitManager/MoveLine/MtArray layouts; every read stays OS-protected. No virtual calls or writes.
 public static class NativeOutlineSceneProbe
 {
@@ -33,15 +34,22 @@ public static class NativeOutlineSceneProbe
         if(LocalProcessMemory.IsAddress(manager,0x3E3C)&&m.Int32(manager+0x3E38,out lines)&&lines is >=0 and <=64)
         for(int line=0;line<lines && units<8192;line++)
         {
-            ulong array=manager+0x38+(uint)line*0xF8+0xB8;
-            if(!m.Int32(array+8,out var count)||count<0||count>2048||!m.Pointer(array+0x18,out var data)){failures++;continue;}
-            for(int index=0;index<count&&units<8192;index++)
+            ulong moveLine=manager+0x38+(uint)line*0xF8;
+            if(!m.Int32(moveLine+0x60,out var header)||!m.Pointer(moveLine+0x48,out var top)){failures++;continue;}
+            int count=(int)((uint)header>>16);
+            if(count>2048){failures++;continue;}
+            var visitedUnits=new HashSet<ulong>();ulong unit=top;bool complete=true;
+            while(unit!=0&&visitedUnits.Count<2048&&units<8192)
             {
-                if(!m.Pointer(data+(uint)index*8,out var unit)||unit==0){failures++;continue;}units++;
+                if(!LocalProcessMemory.IsAddress(unit,0x40)||!visitedUnits.Add(unit)||!m.Int32(unit+0x10,out var unitLine)||unitLine!=line){failures++;complete=false;break;}units++;
                 if(palico==null&&PalicoTypeProbe.IsPalico(m,unit,module)&&PalicoHealthReader.TryRead(m,unit,module,now,revision,out var observedCat))palico=observedCat;
                 if(TryFilter(m,unit,module,line,out var filter)&&filter!=null&&filters.Count<8)filters.Add(filter);
+                if(!m.Pointer(unit+0x30,out unit)){failures++;complete=false;break;}
             }
-            if(!m.Int32(array+8,out var afterCount)||afterCount!=count||!m.Pointer(array+0x18,out var afterData)||afterData!=data){filters.RemoveAll(x=>x.Line==line);failures++;}
+            if(unit!=0){complete=false;failures++;}
+            if(!m.Int32(moveLine+0x60,out var afterHeader)||afterHeader!=header||!m.Pointer(moveLine+0x48,out var afterTop)||afterTop!=top){complete=false;failures++;}
+            if(!complete)filters.RemoveAll(x=>x.Line==line);
+
         }
         else{lines=0;failures++;}
         if(palico!=null&&now>=palico.Time&&now-palico.Time<=2&&PalicoTypeProbe.IsPalico(m,palico.Actor,module)&&m.Pointer(palico.Actor+0x78,out var component))
