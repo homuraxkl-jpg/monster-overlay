@@ -25,3 +25,16 @@
 *.dpapi
 **/config/
 private/
+
+# Never track binary dependencies or model assets, including under tools.
+*.dll
+*.exe
+*.zip
+*.7z
+*.vrm
+*.blend
+*.blend1
+*.pdb
+*.mrl3
+*.mod3
+*.tex
