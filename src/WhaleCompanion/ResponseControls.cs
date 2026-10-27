@@ -23,7 +23,7 @@ public sealed partial class ProbePlugin
         "guard"=>UiLanguage.Text("Guard preparation","防御后准备","防禦後準備"),"spirit"=>UiLanguage.Text("Spirit level (no cooldown)","太刀升刃（无冷却）","太刀升刃（無冷卻）"),
         "monster"=>UiLanguage.Text("Monster state","怪物状态","怪物狀態"),"damage"=>UiLanguage.Text("Damage verdicts","伤害评价","傷害評價"),
         "weapon"=>UiLanguage.Text("Weapon actions","武器动作","武器動作"),"buff"=>UiLanguage.Text("Actual buffs","实际增益","實際增益"),
-        "quest"=>UiLanguage.Text("Quest result","任务结果","任務結果"),_=>key
+        "quest"=>UiLanguage.Text("Hunt outcome (quest / monster death)","狩猎结果（任务／讨伐）","狩獵結果（任務／討伐）"),_=>key
     };
     private void RenderResponseControls()
     {
@@ -50,6 +50,7 @@ public sealed partial class ProbePlugin
             var timing=responses.Settings.Thresholds;
             foreach(var item in new (string Name,double Value,Action<double> Set,double Minimum)[]{
                 ("Event freshness",timing.EventFreshnessSeconds,v=>timing.EventFreshnessSeconds=v,.1),
+                ("Conversation delivery max age",timing.ConversationDeliveryMaxAgeSeconds,v=>timing.ConversationDeliveryMaxAgeSeconds=v,.1),
                 ("AI event timeout",timing.DynamicEventTimeoutSeconds,v=>timing.DynamicEventTimeoutSeconds=v,.1),
                 ("Local message interval",timing.NativeOutputIntervalSeconds,v=>timing.NativeOutputIntervalSeconds=v,0),
                 ("Multiplayer send interval",timing.SharedOutputIntervalSeconds,v=>timing.SharedOutputIntervalSeconds=v,0),

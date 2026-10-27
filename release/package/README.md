@@ -43,8 +43,8 @@
 
 `Game output, multiplayer and memory` 中：
 
-- `Show replies in native game messages` 默认开启，回复进入本机游戏提示区。字幕和 `Show chat status overlay (diagnostic)` 可选；异常时可能回退。加载存档后若未恢复，点 `Resume game output and chat (loaded save)`。
-- `Multiplayer mode: send companion lines to game chat` 默认关闭。开启后陪伴台词通过当前非私聊频道发送，统一前缀【大肥鱼】；不替你切换频道。提交成功不等于队友已收到，队友可见性仍需多人反馈。
+- `Reply output mode`默认选择`Local game messages (only you)`，回复进入本机游戏提示区。字幕和 `Show chat status overlay (diagnostic)` 可选；异常时可能回退。加载存档后若未恢复，点 `Resume game output and chat (loaded save)`。
+- `Reply output mode`选择`Multiplayer game chat (current channel)`后陪伴台词通过当前非私聊频道发送，统一前缀【大肥鱼】；不替你切换频道。提交成功不等于队友已收到，队友可见性仍需多人反馈。
 - `Chat with AI using native game chat`：本机玩家可在原生聊天框与AI对话。`Remember peer chat in multiplayer`和`AI may reply to relevant peer chat`分别控制队友上下文与有意义的回复。队友显示名不是身份认证。
 - `Remember recent hunt observations`保留近期战斗背景；`AI may add relevant proactive hunt comments`默认关闭。原生判断／回复可用独立便宜模型，允许AI保持沉默，消息仍可进入短期上下文。
 - 短期观察各最多64条、20分钟，普通对话也有轮数／字符上限，不是无限聊天档案。New conversation清对话，不自动清狩猎概览；切存档清近期上下文。跨对话长期记忆必须由玩家确认保存，AI不会自行永久写入。
@@ -101,3 +101,14 @@
 - AI实时战斗改写只决定话术，不能用迟到的情绪字段覆盖已确认的战斗／生命表情；普通AI聊天仍可表达情绪。
 
 本轮通过7119项表情／聊天／GMD断言、1130项武器检查、377项配置检查及构造检查；新增绑定仍待实机确认。此前的伤害来源和动作映射限制仍适用，不因表情变化变成精确命中评价。
+
+
+## RC1反馈修订3：聊天忙碌与狩猎结果
+
+输出改为`Reply output mode`单选：`Local game messages (only you)`、`Multiplayer game chat (current channel)`、`Mod subtitles (only you)`。旧版同时勾选的配置在加载时规范为一种模式，多人优先。切换在游戏更新线程应用；多人模式不调用本机提示接口，也不自动回退本机，避免两条输出路径交叉。此前coreclr访问冲突没有完整堆栈，仍不能宣称已经确定或修复崩溃根因。
+
+发送器分别显示三种忙碌：输入栏仍打开、上条发送仍挂起、关闭后还有未确认草稿。真正正在输入／未发送的草稿不覆盖；已通过原生发送回调或本插件提交确认的旧缓冲区，在输入关闭且发送标记消退后可复用。发送前再次核对输入与频道，私聊不发送。若回车后输入栏仍开着，可按Esc结束输入；普通AI对话最多等20秒，战斗评价仍按3秒默认有效期丢弃，不积压旧招评价。ConversationDeliveryMaxAgeSeconds可在Output timing (seconds)调整。
+
+`Enable all companion categories`包含`Hunt outcome (quest / monster death)`。任务完成沿用原生OnQuestComplete；大型怪物死亡接入已有SPL OnMonsterDeath回调，回调内只做受保护类型读取并入队，不调用AI或原生输出。确认后开心约4秒；残血仍优先伤心。小怪、训练物件不触发讨伐；捕获不会被当作死亡，捕获任务完成仍可用任务完成事件回应。死亡与紧邻的任务完成短暂合并，重复回调静默，多目标任务中的死亡不宣称整场任务完成，不指定击杀者。对应事件quest_complete、monster_defeated均提供离线句和AI提示词，可分别停用或固定。
+
+玩家已实机确认多人测试消息能进入游戏聊天；真实AI连续回复、单选界面及新增狩猎结果仍待本修订实机确认。离线通过7128项表情／聊天／GMD断言、1146项武器与狩猎结果检查、383项回复配置检查及构造检查。

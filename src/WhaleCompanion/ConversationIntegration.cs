@@ -6,6 +6,13 @@ namespace WhaleCompanion;
 public sealed partial class ProbePlugin
 {
     private ConversationOptions conversationOptions=new();
+    private int pendingOutputMode=-1;
+    private void ApplyPendingOutputMode()
+    {
+        int next=Interlocked.Exchange(ref pendingOutputMode,-1);
+        if(next<0)return;
+        conversationOptions.SelectOutputMode((ReplyOutputMode)next);ApplyConversationOptions(true);
+    }
     private readonly ObservedContext huntContext=new();
     private readonly HuntLedger huntLedger=new();
     private readonly ObservedContext observedConversation=new();
@@ -24,7 +31,8 @@ public sealed partial class ProbePlugin
     }
     private void ApplyConversationOptions(bool save)
     {
-        nativeOutput=conversationOptions.OutputMode=="native"||conversationOptions.Multiplayer;
+        conversationOptions.SelectOutputMode(conversationOptions.SelectedOutputMode);
+        nativeOutput=conversationOptions.SelectedOutputMode!=ReplyOutputMode.Subtitle;
         nativeChatEnabled=conversationOptions.NativeChat;
         showChatStatus=conversationOptions.ShowStatusOverlay;
         shareEnabled=conversationOptions.Multiplayer;
@@ -103,16 +111,19 @@ public sealed partial class ProbePlugin
     private void RenderConversationControls()
     {
         if(!ImGui.CollapsingHeader(UiLanguage.Text("Game output, multiplayer and memory","游戏输出、联机与记忆","遊戲輸出、連線與記憶")))return;
-        bool native=conversationOptions.OutputMode=="native";
-        if(ImGui.Checkbox(UiLanguage.Text("Show replies in native game messages","回复显示在游戏原生提示区","回覆顯示在遊戲原生提示區"),ref native)){conversationOptions.OutputMode=native?"native":"subtitle";ApplyConversationOptions(true);}
+        int outputMode=(int)conversationOptions.SelectedOutputMode;
+        if(ImGui.Combo(UiLanguage.Text("Reply output mode","回复输出模式","回覆輸出模式"),ref outputMode,new[]{
+            UiLanguage.Text("Local game messages (only you)","本机游戏提示（仅自己）","本機遊戲提示（僅自己）"),
+            UiLanguage.Text("Multiplayer game chat (current channel)","多人游戏聊天（当前频道）","多人遊戲聊天（目前頻道）"),
+            UiLanguage.Text("Mod subtitles (only you)","模组字幕（仅自己）","模組字幕（僅自己）")},3))
+        {Interlocked.Exchange(ref pendingOutputMode,outputMode);}
+        ImGui.TextWrapped(UiLanguage.Text("Choose one output route. Multiplayer mode never calls the local message API; busy chat waits instead of falling back.","只能选择一种输出。多人模式不调用本机提示接口；聊天忙碌时等待，不切换到本机提示。","只能選擇一種輸出。多人模式不呼叫本機提示介面；聊天忙碌時等待，不切換本機提示。"));
         bool overlay=conversationOptions.ShowStatusOverlay;
         if(ImGui.Checkbox(UiLanguage.Text("Show chat status overlay (diagnostic)","显示聊天状态浮窗（诊断）","顯示聊天狀態浮窗（診斷）"),ref overlay))
         {
             conversationOptions.ShowStatusOverlay=showChatStatus=overlay;
             try{conversationOptions.Save(ConversationOptionsPath);}catch{conversationOptionStatus="Could not save overlay preference";}
         }
-        bool multiplayer=conversationOptions.Multiplayer;
-        if(ImGui.Checkbox(UiLanguage.Text("Multiplayer mode: send companion lines to game chat","多人模式：将陪伴台词发送到游戏聊天","多人模式：將陪伴台詞傳送至遊戲聊天"),ref multiplayer)){conversationOptions.Multiplayer=multiplayer;ApplyConversationOptions(true);}
         bool input=conversationOptions.NativeChat;
         if(ImGui.Checkbox(UiLanguage.Text("Chat with AI using native game chat","在游戏原生聊天中与AI对话","在遊戲原生聊天中與AI對話"),ref input)){conversationOptions.NativeChat=input;ApplyConversationOptions(true);}
         bool peers=conversationOptions.ReadPeers;
@@ -127,13 +138,13 @@ public sealed partial class ProbePlugin
         if(ImGui.Button(UiLanguage.Text("Clear recent hunt/chat context","清空近期狩猎与聊天上下文","清空近期狩獵與聊天上下文"))){huntContext.Clear();huntLedger.Clear();observedConversation.Clear();peerInput.Clear();chat.UpdateObservationContext("");chat.Cancel();}
         ImGui.TextWrapped($"{SharedChat.Prefix} | hunt observations: {huntContext.Count} | observed chat: {observedConversation.Count}");
         ImGui.TextWrapped(deliveryStatus);if(conversationOptions.Multiplayer)ImGui.TextWrapped(shareStatus);
-        if(ImGui.Button(UiLanguage.Text("Test local game message (no API)","测试本机游戏消息（不调用AI）","測試本機遊戲訊息（不呼叫AI）")))
+        if(conversationOptions.SelectedOutputMode==ReplyOutputMode.LocalNative&&ImGui.Button(UiLanguage.Text("Test local game message (no API)","测试本机游戏消息（不调用AI）","測試本機遊戲訊息（不呼叫AI）")))
         {nativeOutput=true;nativeSceneReady=HasLoadedSave();nativeDialogue.Enqueue("Whale local test: ABC 123",clock.Elapsed.TotalSeconds);}
         if(conversationOptions.Multiplayer)
         {
             if(ImGui.Button(UiLanguage.Text("Check multiplayer sender (read-only)","检查多人发送器（只读）","檢查多人傳送器（唯讀）")))CheckSharedSender();
             if(ImGui.Button(UiLanguage.Text("Test multiplayer game chat (no API)","测试多人游戏聊天（不调用AI）","測試多人遊戲聊天（不呼叫AI）")))
-            {shareSceneReady=HasLoadedSave();sharedChat.Enqueue("Whale multiplayer test: ABC 123",clock.Elapsed.TotalSeconds);}
+            {shareSceneReady=HasLoadedSave();sharedChat.Enqueue("Whale multiplayer test: ABC 123",clock.Elapsed.TotalSeconds,false);}
         }
         ImGui.TextWrapped(conversationOptionStatus);
         RenderContextExport();

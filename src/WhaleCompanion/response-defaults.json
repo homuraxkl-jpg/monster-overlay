@@ -155,7 +155,7 @@
   },
   "quest_complete": {
     "Category": "quest",
-    "ReferenceText": "辛苦啦，任务完成！这次也平安归来了。",
+    "ReferenceText": "辛苦啦，任务完成！歇一歇再出发。",
     "Prompt": "任务完成，简短陪伴，不编造贡献或奖励。",
     "OfflineText": "",
     "Enabled": true
@@ -1153,5 +1153,12 @@
     "OfflineText": "",
     "ReferenceText": "这一套搓背打出来啦，本鱼给你鼓掌！",
     "Prompt": "只评价本次事实中的动作与结果。安全脱身只是启发式，不声称确定回避成功；搓背只确认完整动作候选，不判断伤害；飞圆仅确认短时衔接，不编造飞圆命中。"
+  },
+  "monster_defeated": {
+    "Category": "quest",
+    "ReferenceText": "讨伐成功啦，先缓口气，本鱼陪着你。",
+    "Prompt": "只确认大型怪物已被讨伐，不指定击杀者或贡献，不据此断言整场任务已完成。简短开心或安心。",
+    "OfflineText": "",
+    "Enabled": true
   }
 }

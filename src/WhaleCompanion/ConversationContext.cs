@@ -1,10 +1,19 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 namespace WhaleCompanion;
 
+public enum ReplyOutputMode { LocalNative, MultiplayerChat, Subtitle }
 public sealed class ConversationOptions
 {
     public string OutputMode {get;set;}="native";
     public bool Multiplayer {get;set;}=false;
+    [System.Text.Json.Serialization.JsonIgnore]
+    public ReplyOutputMode SelectedOutputMode=>Multiplayer||OutputMode=="multiplayer"?ReplyOutputMode.MultiplayerChat:OutputMode=="native"?ReplyOutputMode.LocalNative:ReplyOutputMode.Subtitle;
+    public void SelectOutputMode(ReplyOutputMode mode)
+    {
+        if(!Enum.IsDefined(mode))throw new ArgumentOutOfRangeException(nameof(mode));
+        Multiplayer=mode==ReplyOutputMode.MultiplayerChat;
+        OutputMode=mode switch {ReplyOutputMode.LocalNative=>"native",ReplyOutputMode.MultiplayerChat=>"multiplayer",_=>"subtitle"};
+    }
     public bool NativeChat {get;set;}=true;
     public bool ShowStatusOverlay {get;set;}=false;
     public bool ReadPeers {get;set;}=true;
@@ -18,9 +27,9 @@ public sealed class ConversationOptions
         if(!File.Exists(path))return new();
         if(new FileInfo(path).Length>16000)throw new InvalidDataException();
         var value=JsonSerializer.Deserialize<ConversationOptions>(File.ReadAllText(path),new JsonSerializerOptions{PropertyNameCaseInsensitive=true})??throw new InvalidDataException();
-        if(value.OutputMode is not ("native" or "subtitle")||!double.IsFinite(value.ProactiveIntervalSeconds)||value.ProactiveIntervalSeconds<10||value.ProactiveIntervalSeconds>3600||!double.IsFinite(value.NativeChatCooldownSeconds)||value.NativeChatCooldownSeconds<0||value.NativeChatCooldownSeconds>300)throw new InvalidDataException();return value;
+        if(value.OutputMode is not ("native" or "subtitle" or "multiplayer")||!double.IsFinite(value.ProactiveIntervalSeconds)||value.ProactiveIntervalSeconds<10||value.ProactiveIntervalSeconds>3600||!double.IsFinite(value.NativeChatCooldownSeconds)||value.NativeChatCooldownSeconds<0||value.NativeChatCooldownSeconds>300)throw new InvalidDataException();value.SelectOutputMode(value.SelectedOutputMode);return value;
     }
-    public void Save(string path)=>OfflineDialogue.AtomicWrite(path,JsonSerializer.Serialize(this,new JsonSerializerOptions{WriteIndented=true}));
+    public void Save(string path){SelectOutputMode(SelectedOutputMode);OfflineDialogue.AtomicWrite(path,JsonSerializer.Serialize(this,new JsonSerializerOptions{WriteIndented=true}));}
 }
 public sealed record ObservedContextLine(string Source,string Event,string Text,double Time);
 // In-memory observations only. Silence does not erase chat. No automatic permanent memories.

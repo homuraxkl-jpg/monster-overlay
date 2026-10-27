@@ -2,34 +2,42 @@
 
 namespace WhaleCompanion;
 
-public sealed record NativeLine(long Id, string Text, double Time);
+public sealed record NativeLine(long Id, string Text, double Time,bool Transient=true);
 
 // Bounded local display queue; no network chat API or game pointers here.
 public sealed class NativeDialogue
 {
     private readonly Queue<NativeLine> lines = new();
     private long sequence;
+    private readonly object gate=new();
     private double nextAllowed;
-    public int Count=>lines.Count;
-    public long LatestId => sequence;
+    public int Count{get{lock(gate)return lines.Count;}}
+    public long LatestId {get{lock(gate)return sequence;}}
     public int ExpiredCount { get; private set; }
-    public void Clear() { lines.Clear(); nextAllowed = 0; }
-    public void Enqueue(string text, double now)
+    public void Clear() { lock(gate){lines.Clear(); nextAllowed = 0;} }
+    public void Enqueue(string text, double now,bool transient=true)
     {
+        lock(gate){
         if (!double.IsFinite(now)) return;
         var clean = Format(text);
         if (clean.Length == 0) return;
+        if(lines.TryPeek(out var prior)&&!prior.Transient&&transient&&now>=prior.Time&&now-prior.Time<=ResponseTuning.Thresholds.ConversationDeliveryMaxAgeSeconds)return;
         lines.Clear();
-        lines.Enqueue(new(++sequence, clean, now));
+        lines.Enqueue(new(++sequence, clean, now,transient));
+
+        }
     }
     public NativeLine? Take(double now, bool ready)
     {
+        lock(gate){
         if (!double.IsFinite(now)) { Clear(); return null; }
-        while (lines.TryPeek(out var head) && (now < head.Time || now - head.Time > ResponseTuning.Thresholds.EventFreshnessSeconds)){lines.Dequeue();ExpiredCount++;}
+        while (lines.TryPeek(out var head) && (now < head.Time || now - head.Time > (head.Transient?ResponseTuning.Thresholds.EventFreshnessSeconds:ResponseTuning.Thresholds.ConversationDeliveryMaxAgeSeconds))){lines.Dequeue();ExpiredCount++;}
         if (!ready) return null; // Scene transitions explicitly clear; transient HUD absence should not drop replies.
         if (now < nextAllowed || !lines.TryDequeue(out var line)) return null;
         nextAllowed = now + ResponseTuning.Thresholds.NativeOutputIntervalSeconds;
         return line;
+
+        }
     }
     public static string Format(string text)
     {

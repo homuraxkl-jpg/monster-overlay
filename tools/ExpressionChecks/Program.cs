@@ -434,6 +434,20 @@ var mismatchedGui=SenderFixture();Check(GameChatSender.TrySend(mismatchedGui,0x1
 var failedFlag=SenderFixture();failedFlag.FailFlag=true;failedFlag.Data[0x202A5D][3]=7;var savedDraft=failedFlag.Data[0x202A5D].ToArray();
 Check(GameChatSender.TrySend(failedFlag,0x100000,0x200000,sharedText,out _)==ChatSendResult.Unavailable&&failedFlag.Data[0x202A5D].SequenceEqual(savedDraft),"send flag failure restores original input bytes");
 Check(GameChatSender.TrySend(SenderFixture(),0x100000,0x200000,"not prefixed",out _)==ChatSendResult.Unavailable,"only formatted companion text can be submitted");
+var rememberedInput=new ChatInputHistory();rememberedInput.Bind(0x100000,0x200000);
+var retainedInput=SenderFixture();
+Check(GameChatSender.TrySend(retainedInput,0x100000,0x200000,sharedText,out _,false,rememberedInput)==ChatSendResult.Submitted,"first test submits and remembers only its own buffer");
+Check(GameChatSender.TrySend(retainedInput,0x100000,0x200000,SharedChat.Format("AI reply"),out _,false,rememberedInput)==ChatSendResult.Busy,"pending send cannot be overwritten even when buffer is known");
+retainedInput.Data[0x20325E]=[0];
+Check(GameChatSender.TrySend(retainedInput,0x100000,0x200000,SharedChat.Format("AI reply"),out _,false,rememberedInput)==ChatSendResult.Submitted,"AI reply follows successful test when game retains already-sent text");
+retainedInput.Data[0x20325E]=[0];var ownerText="A confirmed player question";var ownerBytes=new byte[128];System.Text.Encoding.UTF8.GetBytes(ownerText).CopyTo(ownerBytes,0);ownerBytes[100]=7;retainedInput.Data[0x202A5D]=ownerBytes;rememberedInput.ConfirmSent(ownerText);
+Check(GameChatSender.TrySend(retainedInput,0x100000,0x200000,SharedChat.Format("answer"),out _,false,rememberedInput)==ChatSendResult.Submitted,"AI can follow confirmed native player chat rather than mistaking it for a draft");
+retainedInput.Data[0x20325E]=[0];retainedInput.Data[0x202A5D]=new byte[128];retainedInput.Data[0x202A5D][0]=90;
+var protectedDraft=retainedInput.Data[0x202A5D].ToArray();int writesBefore=retainedInput.Writes.Count;
+Check(GameChatSender.TrySend(retainedInput,0x100000,0x200000,sharedText,out _,false,rememberedInput)==ChatSendResult.Busy&&retainedInput.Writes.Count==writesBefore&&retainedInput.Data[0x202A5D].SequenceEqual(protectedDraft),"unknown closed draft remains untouched even after successful AI sends");
+rememberedInput.Bind(0x100000,0x300000);Check(!rememberedInput.CanReuse(0x100000,0x200000,ownerBytes),"GUI replacement invalidates consumed-input history");
+var conversationOutput=new SharedChat();conversationOutput.Enqueue("answer",0,false);conversationOutput.Enqueue("combat",1,true);Check(conversationOutput.Peek(4) is {Transient:false} kept&&kept.Text.EndsWith("answer"),"conversation can wait for typing without being replaced or expired as a combat remark");Check(conversationOutput.Peek(21)==null,"conversational output still has bounded expiry");
+var replacedQueue=new SharedChat();replacedQueue.Enqueue("first",0);var firstId=replacedQueue.Peek(0)!.Id;replacedQueue.Enqueue("second",.1);replacedQueue.Submitted(.1,firstId);Check(replacedQueue.Peek(3)!.Text.EndsWith("second"),"finishing an earlier send never dequeues a newly queued reply");
 var ownChatBuffer=System.Runtime.InteropServices.Marshal.AllocHGlobal(128);
 try{
  var nativeChatMemory=new SelfChatMemory();var bytes=new byte[128];System.Text.Encoding.UTF8.GetBytes(sharedText).CopyTo(bytes,0);

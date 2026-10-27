@@ -2,15 +2,16 @@
 
 namespace WhaleCompanion;
 
-public sealed record SharedChatLine(long Id,string Text,double Time);
+public sealed record SharedChatLine(long Id,string Text,double Time,bool Transient=true);
 public sealed class SharedChat
 {
     public const string Prefix="【大肥鱼】";
     private readonly Queue<SharedChatLine> queue=new();
     private double nextAllowed;
     private long sequence;
-    public int Count=>queue.Count;
-    public void Clear(){queue.Clear();nextAllowed=0;}
+    private readonly object gate=new();
+    public int Count{get{lock(gate)return queue.Count;}}
+    public void Clear(){lock(gate){queue.Clear();nextAllowed=0;}}
     public static bool IsCompanion(string text)=>text.TrimStart().StartsWith(Prefix,StringComparison.Ordinal);
     public static string Format(string text)
     {
@@ -31,17 +32,24 @@ public sealed class SharedChat
         if(truncated)output.Append('…');
         return output.ToString();
     }
-    public void Enqueue(string text,double now)
+    public void Enqueue(string text,double now,bool transient=true)
     {
+        lock(gate){
         if(!double.IsFinite(now))return;
         var formatted=Format(text);if(formatted.Length==0)return;
-        queue.Clear();queue.Enqueue(new(++sequence,formatted,now));
+        if(queue.TryPeek(out var prior)&&!prior.Transient&&transient&&now>=prior.Time&&now-prior.Time<=ResponseTuning.Thresholds.ConversationDeliveryMaxAgeSeconds)return;
+        queue.Clear();queue.Enqueue(new(++sequence,formatted,now,transient));
+
+        }
     }
     public SharedChatLine? Peek(double now)
     {
-        while(queue.TryPeek(out var item)&&(now<item.Time||now-item.Time>ResponseTuning.Thresholds.EventFreshnessSeconds))queue.Dequeue();
+        lock(gate){
+        while(queue.TryPeek(out var item)&&(now<item.Time||now-item.Time>(item.Transient?ResponseTuning.Thresholds.EventFreshnessSeconds:ResponseTuning.Thresholds.ConversationDeliveryMaxAgeSeconds)))queue.Dequeue();
         return now>=nextAllowed&&queue.TryPeek(out var next)?next:null;
+
+        }
     }
-    public void Discard(){if(queue.Count>0)queue.Dequeue();}
-    public void Submitted(double now){queue.Dequeue();nextAllowed=now+ResponseTuning.Thresholds.SharedOutputIntervalSeconds;}
+    public void Discard(long? id=null){lock(gate){if(queue.TryPeek(out var head)&&(id==null||head.Id==id))queue.Dequeue();}}
+    public void Submitted(double now,long? id=null){lock(gate){if(queue.TryPeek(out var head)&&(id==null||head.Id==id))queue.Dequeue();nextAllowed=now+ResponseTuning.Thresholds.SharedOutputIntervalSeconds;}}
 }

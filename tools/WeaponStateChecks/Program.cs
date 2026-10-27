@@ -700,6 +700,10 @@ var negativeFace=CombatDamageDirector.Reaction(new("GreatSword","gs_tcs","真蓄
 var safeExitFace=CombatDamageDirector.Reaction(new("LongSword","ls_iai","居合",0,100,50,false,"test",0,"party","iai_safe_exit"));
 Check(positiveFace.Emotion=="happy"&&negativeFace.Emotion=="sad","positive verdict smiles and negative verdict is sad");
 Check(safeExitFace.Emotion=="relaxed","safe exit remains relaxed rather than mislabeled as a failed counter");
+var huntEnd=new HuntOutcomeDirector();huntEnd.MonsterDied(1,0x5C,0);Check(huntEnd.Take(.5,true)==null,"death waits briefly to merge final-target completion");huntEnd.QuestCompleted(.6);Check(huntEnd.Take(.6,true) is {Kind:"quest_complete"}&&huntEnd.Take(1,true)==null,"quest completion replaces adjacent death with one outcome");huntEnd.QuestCompleted(2);Check(huntEnd.Take(2,true)==null,"duplicate completion callback is silent");
+huntEnd.Reset();huntEnd.MonsterDied(2,0x5C,0);Check(huntEnd.Take(1,true) is {Kind:"monster_defeated"},"nonfinal large-monster death can speak without claiming task completion");huntEnd.MonsterDied(2,0x5C,1.1);Check(huntEnd.Take(2,true)==null,"duplicate same-monster death is silent");
+foreach(int small in new[]{2,3,5,6,8,0x28,0x3B,0x52,0x56,0x62})Check(!HuntOutcomeDirector.IsLarge(small),"small monster or prop never becomes a hunt victory");
+huntEnd.Reset();huntEnd.QuestCompleted(0);Check(huntEnd.Take(1,false)==null&&huntEnd.Take(2,true)==null,"disabled outcome category drops events rather than replaying after enabling");
 Console.WriteLine($"PASS {checks} weapon-state checks; no game/API calls");
 }
 catch(Exception ex){Console.Error.WriteLine("FAIL: "+ex.Message);Environment.ExitCode=1;}

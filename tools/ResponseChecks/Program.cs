@@ -64,7 +64,10 @@ try
     var ambientMessages=new List<ChatMessage>{new("system",ChatConfiguration.ReplyFormatInstruction)};NativeChatDecision.PrepareMessages(ambientMessages,"hunt");Check(ambientMessages[0].content.Contains("不是玩家发言或提问"),"proactive hunt gate does not invent player input");
     Check(NativeDialogue.Format("【大肥鱼】hello")=="【大肥鱼】hello"&&SharedChat.Format("【大肥鱼】hello")=="【大肥鱼】hello","visible prefix appears exactly once in both routes");
     var options=new ConversationOptions();Check(options.OutputMode=="native"&&!options.Multiplayer&&options.NativeChat,"native local display and chat default; multiplayer remains explicit");
-    var optionsPath=Path.Combine(dir,"conversation.json");options.Multiplayer=true;options.Save(optionsPath);Check(ConversationOptions.Load(optionsPath).Multiplayer,"multiplayer preference persists");
+    foreach(var mode in Enum.GetValues<ReplyOutputMode>()){options.SelectOutputMode(mode);Check(options.SelectedOutputMode==mode&&options.Multiplayer==(mode==ReplyOutputMode.MultiplayerChat),"output selection chooses exactly one route");}
+    options.OutputMode="native";options.Multiplayer=true;
+    var optionsPath=Path.Combine(dir,"conversation.json");options.Multiplayer=true;options.Save(optionsPath);Check(ConversationOptions.Load(optionsPath) is {Multiplayer:true,OutputMode:"multiplayer"},"legacy overlapping booleans normalize to one multiplayer route");
+    options.SelectOutputMode(ReplyOutputMode.LocalNative);options.Save(optionsPath);Check(!ConversationOptions.Load(optionsPath).Multiplayer,"selecting local output disables multiplayer rather than enabling both");
     Check(ChatSettings.LanguageInstruction("eng")=="Reply in English.","explicit reply language");
     Check(ChatSettings.LanguageInstruction("auto").Contains("persona"),"reply language follows persona independent of UI");
     var exportPath=ContextExport.Write(Path.Combine(dir,"out"),"null","[]",new[]{new ChatMessage("user","hello sk-abcdefghijklmnopqrstuvwx")},new[]{"confirmed synthetic fact"});

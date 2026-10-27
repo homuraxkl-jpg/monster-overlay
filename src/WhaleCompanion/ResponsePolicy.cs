@@ -73,6 +73,7 @@ public sealed class ResponsePolicy
 
 public sealed class ResponseThresholds
 {
+    public double ConversationDeliveryMaxAgeSeconds {get;set;}=20;
     public double EventFreshnessSeconds {get;set;}=3;
     public double DynamicEventTimeoutSeconds {get;set;}=2.5;
     public double NativeOutputIntervalSeconds {get;set;}=1;
@@ -103,7 +104,7 @@ public sealed class ResponseThresholds
     {
         bool Ratio(double v)=>double.IsFinite(v)&&v>0&&v<=1;
         bool Time(double v)=>double.IsFinite(v)&&v>=0&&v<=3600;
-        return new[]{EventFreshnessSeconds,DynamicEventTimeoutSeconds,CombatResultMaxAgeSeconds}.All(v=>Time(v)&&v>=.1)&&new[]{NativeOutputIntervalSeconds,SharedOutputIntervalSeconds,AiReplyQuietSeconds}.All(Time)&&new[]{FullHealthRelaxRatio,LowHealthRatio,LowHealthResetRatio,HealthLossRatio,PlayerHealRatio,PalicoArmRatio,PalicoHealRatio}.All(Ratio)&&LowHealthResetRatio>LowHealthRatio&&new[]{SameActionExtraCooldown,MantleCooldown,HealthLossWindow,PlayerHealWindow,PlayerHealCooldown,PalicoHealWindow,PalicoHealCooldown,BowPowerWindow}.All(Time)&&double.IsFinite(PlayerHealMinimum)&&PlayerHealMinimum>=0&&PlayerHealMinimum<=10000&&EvasionCount is >=1 and <=100&&EvasionWindow is >=1 and <=3600&&BowDualEvasionWindow is >=1 and <=3600&&BowPowerCount is >=1 and <=100;
+        return new[]{ConversationDeliveryMaxAgeSeconds,EventFreshnessSeconds,DynamicEventTimeoutSeconds,CombatResultMaxAgeSeconds}.All(v=>Time(v)&&v>=.1)&&new[]{NativeOutputIntervalSeconds,SharedOutputIntervalSeconds,AiReplyQuietSeconds}.All(Time)&&new[]{FullHealthRelaxRatio,LowHealthRatio,LowHealthResetRatio,HealthLossRatio,PlayerHealRatio,PalicoArmRatio,PalicoHealRatio}.All(Ratio)&&LowHealthResetRatio>LowHealthRatio&&new[]{SameActionExtraCooldown,MantleCooldown,HealthLossWindow,PlayerHealWindow,PlayerHealCooldown,PalicoHealWindow,PalicoHealCooldown,BowPowerWindow}.All(Time)&&double.IsFinite(PlayerHealMinimum)&&PlayerHealMinimum>=0&&PlayerHealMinimum<=10000&&EvasionCount is >=1 and <=100&&EvasionWindow is >=1 and <=3600&&BowDualEvasionWindow is >=1 and <=3600&&BowPowerCount is >=1 and <=100;
     }
 }
 public static class ResponseTuning

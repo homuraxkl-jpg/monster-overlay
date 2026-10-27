@@ -55,7 +55,7 @@ public sealed class CompanionChat : IDisposable
     public string NativeStatus { get; private set; } = "等待主人消息";
     private Func<bool>? relevant;
     public event Action<CompanionReply>? ReplyReceived;
-    public event Action<string>? LineReady;
+    public event Action<string,bool>? LineReady;
     public event Action<string>? ConversationReplyReady;
     public event Action? ConversationReset;
     public string LastLine { get; private set; } = "";
@@ -163,8 +163,8 @@ public sealed class CompanionChat : IDisposable
         finally { CryptographicOperations.ZeroMemory(bytes); }
     }
 
-    public void SayLocal(string text) { lock (gate) SayLocalCore(text); }
-    private void SayLocalCore(string text) { LastLine = text; LineReady?.Invoke(text); }
+    public void SayLocal(string text,bool transient=true) { lock (gate) SayLocalCore(text,transient); }
+    private void SayLocalCore(string text,bool transient) { LastLine = text; LineReady?.Invoke(text,transient); }
     public void StartEvent(string text, Func<bool> isRelevant) { lock (gate) StartEventCore(text, isRelevant); }
     private void StartEventCore(string text, Func<bool> isRelevant)
     {
@@ -268,7 +268,7 @@ public sealed class CompanionChat : IDisposable
         // Automatic event faces follow confirmed mechanics immediately; late AI wording cannot overwrite them.
         if(completion!=null){completion(reply.Text);return;}
         LastLine = reply.Text;
-        LineReady?.Invoke(reply.Text);
+        LineReady?.Invoke(reply.Text,wasAutomatic&&!wasNativeDecision);
         ReplyReceived?.Invoke(reply);
         if (wasAutomatic) return;
         ConversationReplyReady?.Invoke(reply.Text);
