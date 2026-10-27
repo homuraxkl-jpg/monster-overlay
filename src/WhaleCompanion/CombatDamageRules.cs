@@ -350,7 +350,7 @@ public sealed class CombatDamageDirector
     {
         if(result.Outcome=="spine_complete")return new("spine_complete","这一套搓背打出来啦，本鱼给你鼓掌！","happy",.6f,
             $"{result.Mechanic} 按用户要求完整动作序列就夸一次，不设置伤害门槛，不产生低伤害或中间评价；动作编号映射仍待实机确认。按人设简短夸奖。");
-        if(result.Outcome=="lance_counter_damage")return new("lance_counter_damage",result.Good?"这一刺打得起劲，本鱼跟上啦！":"这一刺蹭到啦，稳住再找下一次机会。",result.Good?"happy":"relaxed",.5f,
+        if(result.Outcome=="lance_counter_damage")return new("lance_counter_damage",result.Good?"这一刺打得起劲，本鱼跟上啦！":"这一刺蹭到啦，稳住再找下一次机会。",result.Good?"happy":"sad",.5f,
             $"进入长枪反击突刺动作后伤害增量估计{result.Damage}，达到门槛={result.Good}。{result.Mechanic} 来源={result.DamageSource}，不能保证排除随从或环境。不说挡住攻击、反击成功、无伤或完美防御，只轻松回应这次出刺的伤害估计。");
         if(result.Outcome is "ig_dive_follow" or "ig_dive_damage")
         {
@@ -358,13 +358,13 @@ public sealed class CombatDamageDirector
             string diveText=result.Good
                 ?(follow?"下戳打得起劲，接着飞圆，本鱼跟上啦！":"这下下戳打得起劲，本鱼看到了！")
                 :(follow?"这次下戳没打够劲，接着飞圆再找机会呦。":"这次下戳没打够劲，站稳再找下一次机会呦。");
-            return new(result.Outcome,diveText.TrimEnd(),result.Good?"happy":"relaxed",.5f,
+            return new(result.Outcome,diveText.TrimEnd(),result.Good?"happy":"sad",.5f,
                 $"急袭动作阶段伤害增量估计={result.Damage}，门槛={result.Threshold}。{result.Mechanic} 伤害来源={result.DamageSource}，仍可能混入随从或环境。只按是否达到伤害门槛作正面或负面两档评价，不添加中间评价，也不把低伤害或零增量说成已经证明全空。{(follow?"只确认短时间进入飞圆动作，不确认飞圆命中或整套成功，只回应一次衔接。":"只评价急袭阶段，不编造后续连招。")}");
         }
         if(result.Outcome=="iai_safe_exit")return new("iai_safe_exit","这一刀脱身啦，站稳再接下一招。","relaxed",.45f,
             $"大居合安全脱身候选：未观察到对怪伤害，刃色未降、HP采样未减少。{result.Mechanic} 按人设轻松陪伴一句，不贬低空刀，不说反击命中或大成功，也不声称确定躲过敌人攻击、无敌或霸体。空放也可能符合这个启发式。");
         string text=result.Good?$"这发{result.Label}打得好！本鱼看到了！":result.Key is "ls_iai" or "sns_rush" or "sa_zsd"?$"这次{result.Label}没对上，下一次本鱼陪你找准点。":$"这次{result.Label}没打够劲，下次本鱼陪你找准机会。";
-        return new(result.Good?"combat_good":"combat_mostly_missed",text,result.Good?"happy":"relaxed",.65f,
+        return new(result.Good?"combat_good":"combat_mostly_missed",text,result.Good?"happy":"sad",.65f,
             $"本地宽松估计：{result.Label}，主人伤害增量{result.Damage}，动态参考伤害{result.Reference:0.#}，门槛{result.Threshold:0.#}，评价{(result.Good?"打得好":"没有打好")}；机制信息：{result.Mechanic}；伤害来源={result.DamageSource}（display_local_candidate为单人显示伤害候选，不能保证排除随从或环境）。这是当前装备基础数据与动作倍率的估计，非精确命中率。按人设简短{(result.Good?"夸奖":"轻轻调侃")}，不编造命中瓶数、弱点或队友归属。");
     }
 }

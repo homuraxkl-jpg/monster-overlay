@@ -88,3 +88,16 @@
 `Offline Palico dialogue / persona editor` → `Use current chat persona.md` → `Rewrite all editable lines with persona (paid API, preview only)`可分批改写全部可编辑台词，保留特殊说话者原句。先预览，再点`Save generated batch and build candidate`；退出游戏运行`应用修改.cmd`，重启后加载。一次按钮会顺序产生多次付费请求，可取消，失败不会自动保存，不发送聊天记忆或原始VRM。繁体目标会规范为繁体，简体目标规范为简体。
 
 时序默认值可在`Response categories and fixed lines` → `Output timing (seconds)`调整，也对应`config/responses.json`的Thresholds：EventFreshnessSeconds、DynamicEventTimeoutSeconds、NativeOutputIntervalSeconds、SharedOutputIntervalSeconds、AiReplyQuietSeconds、CombatResultMaxAgeSeconds。调大有效期会容许旧招式评价延后出现。
+
+
+## RC1反馈修订2：动作评价与表情
+
+使用已转换的原模型形态键网格，不新增表情资产或改动原始VRM。`Automatic face animation (experimental)`默认开启；关闭后仍可手动预览，自动表情与眨眼停用。
+
+- 正面战斗评价：微笑；负面评价：难过。检测确认时立即驱动表情，不等待AI或聊天发送，也不因台词CD排队延后表情。
+- 安全脱身等中性结果：放松；不是负面评价。
+- 玩家HP不高于25%：优先保持伤心；恢复到40%及以上解除危险状态，避免阈值附近跳脸。这两个比率沿用responses.json的LowHealthRatio和LowHealthResetRatio。残血时夸奖或AI聊天表情不能盖掉危险表情。
+- 玩家恢复状态：放松；即使没有触发回血台词，从未满血恢复至满血也会放松约4秒，然后回到自然表情和眨眼。满血阈值为Thresholds.FullHealthRelaxRatio，默认1。换场景、初次读取或最大HP变化不会凭空生成回血表情。
+- AI实时战斗改写只决定话术，不能用迟到的情绪字段覆盖已确认的战斗／生命表情；普通AI聊天仍可表达情绪。
+
+本轮通过7119项表情／聊天／GMD断言、1130项武器检查、377项配置检查及构造检查；新增绑定仍待实机确认。此前的伤害来源和动作映射限制仍适用，不因表情变化变成精确命中评价。

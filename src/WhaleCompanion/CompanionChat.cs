@@ -265,7 +265,8 @@ public sealed class CompanionChat : IDisposable
         }
         else reply = CompanionReply.Parse(result.reply);
         if (string.IsNullOrWhiteSpace(reply.Text)) { completion?.Invoke(null); Status = "Invalid structured reply discarded"; return; }
-        if(completion!=null){ReplyReceived?.Invoke(reply);completion(reply.Text);return;}
+        // Automatic event faces follow confirmed mechanics immediately; late AI wording cannot overwrite them.
+        if(completion!=null){completion(reply.Text);return;}
         LastLine = reply.Text;
         LineReady?.Invoke(reply.Text);
         ReplyReceived?.Invoke(reply);

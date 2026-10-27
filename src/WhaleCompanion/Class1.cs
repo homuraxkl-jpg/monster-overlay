@@ -155,7 +155,7 @@ public sealed partial class ProbePlugin : IPlugin
     public void OnLoad()
     {
         try{logSettings=LogSettings.Load(Path.Combine(CompanionChat.ConfigurationDirectory,"logging.json"));}catch{logSettings=new();}
-        WriteLog("P11.5 RC1 feedback1: fresh replies, native chat routing and Chinese scripts 2026-10-27");
+        WriteLog("P11.5 RC1 feedback2: combat faces and health state priority 2026-10-27");
         try{gameModule=(ulong)(System.Diagnostics.Process.GetCurrentProcess().MainModule?.BaseAddress??0);}catch{gameModule=0;}
         UiLanguage.Load(Path.Combine(CompanionChat.ConfigurationDirectory,"ui-language.txt"));
         responses.Load(Path.Combine(CompanionChat.ConfigurationDirectory,"responses.json"));
@@ -253,6 +253,7 @@ public sealed partial class ProbePlugin : IPlugin
         catch(Exception ex) { nativeChatEnabled=false;nativeInput.Clear();chat.CancelNative();WriteLog($"NATIVE_CHAT_STOPPED exception={ex.GetType().Name}"); }
         FlushNativeDialogue();
         ProcessSharedChat();
+        if(!enabled||scenePaused||!autoCompanion)expression.ObserveHealth(0,0,clock.Elapsed.TotalSeconds,false);
         expression.Update(clock.Elapsed.TotalSeconds);
         facePlayback.Update(clock.Elapsed.TotalSeconds, animatedFace, expression.Emotion, expression.Weight, expression.Blink);
         selectedFaceGroup = facePlayback.Group;
@@ -280,6 +281,7 @@ public sealed partial class ProbePlugin : IPlugin
             if (!float.IsFinite(current) || !float.IsFinite(maximum) || maximum <= 0 || current < 0 || current > maximum) { Reset(); return; }
             if (baseline && current < hp) Add($"HP decreased {hp - current:0.0} (cause unknown)");
             hp = current; maxHp = maximum; baseline = true;
+            expression.ObserveHealth(hp,maxHp,clock.Elapsed.TotalSeconds,autoCompanion&&responses.Settings.Enabled&&responses.Settings.Categories.TryGetValue("health",out var healthFaces)&&healthFaces.Enabled);
             sampledPlayer=(ulong)player.Instance;
             nativeSceneReady=nativeOutput;nativeChatSceneReady=nativeChatEnabled;shareSceneReady=shareEnabled;peerSceneReady=readPeerChat;
             if (autoCompanion) HandleEvent(companionEvents.Observe(hp, maxHp, clock.Elapsed.TotalSeconds));
@@ -300,7 +302,7 @@ public sealed partial class ProbePlugin : IPlugin
             var monsterState=monsterStateDirector.Take(clock.Elapsed.TotalSeconds,saedResponses&&autoCompanion&&!chat.Busy&&clock.Elapsed.TotalSeconds>=actionQuietUntil);
             if(monsterState!=null)
             {
-                EventLine("monster_"+monsterState.Kind,"monster",MonsterStateDirector.Text(monsterState.Kind),"已确认怪物状态："+monsterState.Kind+"。只说该状态，不指定部位，不宣称主人造成，不编造伤害或贡献。");expression.Offer("happy",.5f,1,clock.Elapsed.TotalSeconds,3);actionQuietUntil=clock.Elapsed.TotalSeconds+3;
+                EventLine("monster_"+monsterState.Kind,"monster",MonsterStateDirector.Text(monsterState.Kind),"已确认怪物状态："+monsterState.Kind+"。只说该状态，不指定部位，不宣称主人造成，不编造伤害或贡献。");expression.Offer("relaxed",.65f,3,clock.Elapsed.TotalSeconds,4);actionQuietUntil=clock.Elapsed.TotalSeconds+3;
                 WriteLog("MONSTER_STATE_RESPONSE kind="+monsterState.Kind+" owner=unknown source=native_state");
             }
             status = "Player available";
@@ -645,7 +647,7 @@ public sealed partial class ProbePlugin : IPlugin
                 if (reaction != null)
                 {
                     EventLine("spirit_level_up_"+change.Current,"spirit",reaction.Text,reaction.Context); actionQuietUntil = now;
-                    expression.Offer(reaction.Emotion, reaction.Intensity, 1, now, 3);
+                    expression.Offer(reaction.Emotion, reaction.Intensity, 2, now, 3);
                     WriteLog($"SPIRIT_COMPANION old={change.Previous} new={change.Current}");
                     
                 }
@@ -670,7 +672,7 @@ public sealed partial class ProbePlugin : IPlugin
             var reaction=weaponStateResponses.Take(snapshot,now,now>=actionQuietUntil&&!chat.Busy);
             if(reaction!=null)
             {
-                EventLine(ResponseCategoryOf(reaction.Kind)=="weapon"?weapon+"."+reaction.Kind:reaction.Kind,ResponseCategoryOf(reaction.Kind),reaction.Text,reaction.Context);expression.Offer(reaction.Emotion,reaction.Intensity,1,now,3);actionQuietUntil=now+(saedResponses?2:8);
+                EventLine(ResponseCategoryOf(reaction.Kind)=="weapon"?weapon+"."+reaction.Kind:reaction.Kind,ResponseCategoryOf(reaction.Kind),reaction.Text,reaction.Context);expression.Offer(reaction.Emotion,reaction.Intensity,2,now,3);actionQuietUntil=now+(saedResponses?2:8);
                 WriteLog($"WEAPON_STATE_RESPONSE kind={reaction.Kind} weapon={weapon} experimental=true");
                 
             }
@@ -703,7 +705,7 @@ public sealed partial class ProbePlugin : IPlugin
                 var contactReaction=contactEvasionDirector.TryRespond((ulong)player,weapon,responseNow);
                 if(contactReaction!=null)
                 {
-                    EventLine(contactReaction.Kind+"_"+(weapon is "Bow" or "DualBlades"?weapon:"common"),"evasion",contactReaction.Text,contactReaction.Context);expression.Offer(contactReaction.Emotion,contactReaction.Intensity,1,responseNow,3);
+                    EventLine(contactReaction.Kind+"_"+(weapon is "Bow" or "DualBlades"?weapon:"common"),"evasion",contactReaction.Text,contactReaction.Context);expression.Offer(contactReaction.Emotion,contactReaction.Intensity,2,responseNow,3);
                     WriteLog("EVASION_NATIVE_RESPONSE "+System.Text.Json.JsonSerializer.Serialize(new{kind=contactReaction.Kind,weapon,window_seconds=EvasionContactDirector.WindowSeconds(weapon),successful_actions=4,cooldown_seconds=0,experimental=true}));
                     
                 }
@@ -760,7 +762,7 @@ public sealed partial class ProbePlugin : IPlugin
         if(reaction==null||!allWeaponCompanion||!autoCompanion||!actionCompanion||now<actionQuietUntil||chat.Busy)return;
         pendingGuardRecoil=null;
         if(saedResponses&&weapon=="ChargeBlade")reaction=reaction with{Text="挡住了，要上了！",Context=reaction.Context+" 这是超解前的起势陪伴，可以按人设说要上了，不断言精确GP。"};
-        EventLine(ResponseCategoryOf(reaction.Kind)=="weapon"?weapon+"."+reaction.Kind:reaction.Kind,ResponseCategoryOf(reaction.Kind),reaction.Text,reaction.Context);expression.Offer(reaction.Emotion,reaction.Intensity,1,now,3);actionQuietUntil=now+(saedResponses?1.5:8);
+        EventLine(ResponseCategoryOf(reaction.Kind)=="weapon"?weapon+"."+reaction.Kind:reaction.Kind,ResponseCategoryOf(reaction.Kind),reaction.Text,reaction.Context);expression.Offer(reaction.Emotion,reaction.Intensity,2,now,3);actionQuietUntil=now+(saedResponses?1.5:8);
         WriteLog($"NATIVE_GUARD_RESPONSE kind={reaction.Kind} weapon={weapon} action={action} gp=unknown hit=unknown");
         
     }
@@ -818,7 +820,10 @@ public sealed partial class ProbePlugin : IPlugin
             if(!chat.Busy&&now>=actionQuietUntil){EventLine("rolling_output","damage","这一阵打得真起劲，本鱼给你加饭呦！",rolling.Mechanic+"。持续输出达到人工参考，不说真实DPS或完整面板。");expression.Offer("happy",.6f,1,now,3);actionQuietUntil=now+5;}
         }
         var result=combatVerdicts.Observe(ownerCounter,combatFacts,now);
-        if(result!=null){RecordHunt("combat_"+result.Key,$"{result.Label}: damage estimate={result.Damage}; threshold={result.Threshold}; positive_verdict={result.Good}; source={result.DamageSource}; {result.Mechanic}",now);combatFeedback.Record(result);pendingSaedResult=result;WriteLog("COMBAT_DAMAGE_VERDICT "+System.Text.Json.JsonSerializer.Serialize(result));}
+        if(result!=null){
+            if(responses.Settings.Enabled&&responses.Settings.Categories.TryGetValue("damage",out var faceCategory)&&faceCategory.Enabled)
+            {var immediateFace=CombatDamageDirector.Reaction(result);expression.Offer(immediateFace.Emotion,immediateFace.Intensity,2,now,3);WriteLog($"FACE_VERDICT move={result.Key} outcome={result.Outcome} positive={result.Good} emotion={immediateFace.Emotion}");}
+            RecordHunt("combat_"+result.Key,$"{result.Label}: damage estimate={result.Damage}; threshold={result.Threshold}; positive_verdict={result.Good}; source={result.DamageSource}; {result.Mechanic}",now);combatFeedback.Record(result);pendingSaedResult=result;WriteLog("COMBAT_DAMAGE_VERDICT "+System.Text.Json.JsonSerializer.Serialize(result));}
         if(now>=nextCounterLog){nextCounterLog=now+5;WriteLog("OWNER_DAMAGE_COUNTER "+System.Text.Json.JsonSerializer.Serialize(new{sample=ownerCounter,status=counterStatus,window=combatVerdicts.Status,equipment=combatFacts.Equipment,fields=combatFacts.Fields}));}
     }
     private void StopCombatFallback()
@@ -835,7 +840,7 @@ public sealed partial class ProbePlugin : IPlugin
         {pendingSaedResult=null;return;}
         if(chat.Busy||now<actionQuietUntil)return;
         pendingSaedResult=null;var reaction=CombatDamageDirector.Reaction(result);
-        EventLine(result.Key+(result.Label.Contains("强击")?"_strong":"")+"_"+result.Outcome+"_"+(result.Good?"good":"bad"),"damage",reaction.Text,reaction.Context);expression.Offer(reaction.Emotion,reaction.Intensity,1,now,3);actionQuietUntil=now+5;
+        EventLine(result.Key+(result.Label.Contains("强击")?"_strong":"")+"_"+result.Outcome+"_"+(result.Good?"good":"bad"),"damage",reaction.Text,reaction.Context);actionQuietUntil=now+5;
         WriteLog($"COMBAT_VERDICT_RESPONSE kind={reaction.Kind} move={result.Key} damage={result.Damage} threshold={result.Threshold:0.#} estimated=true");
         
     }
@@ -916,7 +921,7 @@ public sealed partial class ProbePlugin : IPlugin
         pendingGuardRecoil=null;nextRecoilResponse=now+ResponseTuning.Cooldown("guard",15);
         var reaction=NativeGuardRecoil.Reaction(value);
         if(saedResponses&&weapon=="ChargeBlade")reaction=reaction with{Text="接住了，要上了！",Context=reaction.Context+" 可以说要上了，作为防御后起势陪伴；不强调精确GP。"};
-        EventLine(ResponseCategoryOf(reaction.Kind)=="weapon"?weapon+"."+reaction.Kind:reaction.Kind,ResponseCategoryOf(reaction.Kind),reaction.Text,reaction.Context);expression.Offer(reaction.Emotion,reaction.Intensity,1,now,3);actionQuietUntil=now+(saedResponses?1.5:8);
+        EventLine(ResponseCategoryOf(reaction.Kind)=="weapon"?weapon+"."+reaction.Kind:reaction.Kind,ResponseCategoryOf(reaction.Kind),reaction.Text,reaction.Context);expression.Offer(reaction.Emotion,reaction.Intensity,2,now,3);actionQuietUntil=now+(saedResponses?1.5:8);
         WriteLog($"GUARD_RECOIL_RESPONSE weapon={weapon} id={value.RecoilId} gp=unknown");
         
     }
@@ -978,12 +983,12 @@ public sealed partial class ProbePlugin : IPlugin
     }
     private void HandleEvent(string? kind)
     {
-        if (kind == null) return;
+        if (kind == null||!responses.Settings.Enabled||!responses.Settings.Categories.TryGetValue("health",out var healthCategory)||!healthCategory.Enabled) return;
         actionQuietUntil = clock.Elapsed.TotalSeconds + 8;
         Add($"Companion event {kind}");
         if(kind=="health_recovered")
         {
-            expression.Offer("happy",.5f,1,clock.Elapsed.TotalSeconds,3);
+            expression.Offer("relaxed",.65f,3,clock.Elapsed.TotalSeconds,4);
             EventLine("health_recovered","health","得救啦，状态大健康！","玩家HP明显恢复，只说恢复状态，不说是谁用了什么道具。");
             WriteLog("HEALTH_RECOVERED source=unknown item=unknown use_completed=unknown");
             return;
@@ -1006,7 +1011,7 @@ public sealed partial class ProbePlugin : IPlugin
         var reaction = actionDirector.Observe(sample, now);
         if (reaction == null) return;
         EventLine(ResponseCategoryOf(reaction.Kind)=="weapon"?weapon+"."+reaction.Kind:reaction.Kind,ResponseCategoryOf(reaction.Kind),reaction.Text,reaction.Context);
-        expression.Offer(reaction.Emotion, reaction.Intensity, 1, now, 2.5);
+        expression.Offer(reaction.Emotion, reaction.Intensity, 2, now, 2.5);
         WriteLog($"ACTION_COMPANION kind={reaction.Kind} set={sample.Set} id={sample.Id} hit=unknown");
     }
 

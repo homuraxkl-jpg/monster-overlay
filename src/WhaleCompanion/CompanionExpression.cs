@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace WhaleCompanion;
 
@@ -30,6 +30,28 @@ public sealed class CompanionExpression
     private int priority;
     private string target = "neutral";
     private float strength;
+    private bool healthDanger;
+    private float? previousHealthRatio,previousHealthMaximum;
+    private double healthSampleTime=double.NaN;
+    public bool HealthDanger=>healthDanger;
+    public void ObserveHealth(float health,float maximum,double now,bool enabled=true)
+    {
+        if(!enabled||!double.IsFinite(now)||!float.IsFinite(health)||!float.IsFinite(maximum)||maximum<=0||health<0||health>maximum)
+        {ClearHealth();return;}
+        bool continuous=previousHealthMaximum==maximum&&double.IsFinite(healthSampleTime)&&now>=healthSampleTime&&now-healthSampleTime<=1;
+        if(!continuous){ClearHealth();}
+        float ratio=health/maximum;bool wasDanger=healthDanger;
+        healthDanger=healthDanger?ratio<ResponseTuning.Thresholds.LowHealthResetRatio:ratio<=ResponseTuning.Thresholds.LowHealthRatio;
+        if(wasDanger!=healthDanger){target="neutral";strength=0;priority=0;until=now;}
+        if(!healthDanger&&continuous&&previousHealthRatio<ResponseTuning.Thresholds.FullHealthRelaxRatio&&ratio>=ResponseTuning.Thresholds.FullHealthRelaxRatio)
+            Offer("relaxed",.65f,3,now,4);
+        previousHealthRatio=ratio;previousHealthMaximum=maximum;healthSampleTime=now;
+    }
+    private void ClearHealth()
+    {
+        if(healthDanger){target="neutral";strength=0;priority=0;until=0;}
+        healthDanger=false;previousHealthRatio=previousHealthMaximum=null;healthSampleTime=double.NaN;
+    }
     public string Emotion { get; private set; } = "neutral";
     public float Weight { get; private set; }
     public float Blink { get; private set; }
@@ -37,6 +59,7 @@ public sealed class CompanionExpression
     public void Offer(string emotion, float intensity, int importance, double now, double duration = 4)
     {
         if (!double.IsFinite(now) || !double.IsFinite(duration) || duration <= 0) return;
+        if (healthDanger) return;
         if (now < until && importance < priority) return;
         target = CompanionReply.Normalize(emotion);
         strength = float.IsFinite(intensity) ? Math.Clamp(intensity, 0, 1) : 0;
@@ -48,10 +71,12 @@ public sealed class CompanionExpression
         if (!double.IsFinite(now)) return;
         var dt = Math.Clamp(now - lastTime, 0, 0.1); lastTime = now;
         if (now >= until) { target = "neutral"; priority = 0; }
+        var effectiveTarget=healthDanger?"sad":target;
+        var effectiveStrength=healthDanger ? .9f : strength;
         // Fade the old expression out before changing its identity.
-        var desired = Emotion == target ? (target == "neutral" ? 0 : strength) : 0;
+        var desired = Emotion == effectiveTarget ? (effectiveTarget == "neutral" ? 0 : effectiveStrength) : 0;
         Weight += Math.Clamp(desired - Weight, -(float)dt / 0.22f, (float)dt / 0.22f);
-        if (Weight <= 0.001f) { Weight = 0; Emotion = target; }
+        if (Weight <= 0.001f) { Weight = 0; Emotion = effectiveTarget; }
         // Finish a blink through its closed hold even at low/jittery frame rates.
         // Frame progression is bounded so a delayed update cannot skip the entire closure.
         if (Emotion != "neutral" && Weight > 0.05f) PostponeBlink(now + 1);
@@ -71,6 +96,7 @@ public sealed class CompanionExpression
 
     public void Reset(double now)
     {
+        ClearHealth();
         target = Emotion = "neutral"; Weight = Blink = strength = 0;
         until = lastTime = now; nextBlink = now + 3; blinkPhase = -1; priority = 0;
     }

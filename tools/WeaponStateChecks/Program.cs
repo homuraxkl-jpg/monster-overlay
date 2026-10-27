@@ -1,4 +1,4 @@
-using WhaleCompanion;
+﻿using WhaleCompanion;
 try
 {
 int checks=0;
@@ -695,6 +695,11 @@ Check(!ChatReadiness.IsReady(readyMemory,readyModule,"unknown")&&!ChatReadiness.
  nm.Values[obj+0x10]=2;Check(NativeOutlineSceneProbe.Capture(nm,manager,outlineModule,null,1,"421810").Filters.Length==0,"foreign line link rejected");nm.Values[obj+0x10]=0;
  int readsBefore=nm.Reads;Check(NativeOutlineSceneProbe.Capture(nm,manager,outlineModule,null,1,"other").Units==0&&nm.Reads==readsBefore,"unsupported revision never scans scene");
 }
+var positiveFace=CombatDamageDirector.Reaction(new("LongSword","ls_foresight","见切",100,100,50,true,"test",0));
+var negativeFace=CombatDamageDirector.Reaction(new("GreatSword","gs_tcs","真蓄",1,100,50,false,"test",0));
+var safeExitFace=CombatDamageDirector.Reaction(new("LongSword","ls_iai","居合",0,100,50,false,"test",0,"party","iai_safe_exit"));
+Check(positiveFace.Emotion=="happy"&&negativeFace.Emotion=="sad","positive verdict smiles and negative verdict is sad");
+Check(safeExitFace.Emotion=="relaxed","safe exit remains relaxed rather than mislabeled as a failed counter");
 Console.WriteLine($"PASS {checks} weapon-state checks; no game/API calls");
 }
 catch(Exception ex){Console.Error.WriteLine("FAIL: "+ex.Message);Environment.ExitCode=1;}

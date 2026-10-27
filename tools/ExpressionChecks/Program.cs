@@ -16,6 +16,25 @@ Check(director.Emotion == "neutral" && director.Weight == 0, "expiry neutral");
 for(int n=61;n<=1000;n++) { director.Update(n*.01+6); Check(director.Blink >= 0 && director.Blink <= 1, "blink bounded"); }
 director.Reset(20);
 Check(director.Emotion == "neutral" && director.Blink == 0, "reset");
+// Combat states drive the existing meshes even without a line/API completion.
+var healthFace=new CompanionExpression();var healthPlayback=new FacePlayback();
+healthFace.ObserveHealth(100,100,0);
+for(int frame=1;frame<=600;frame++)
+{
+    double time=frame/60.0;
+    if(frame%6==0)healthFace.ObserveHealth(10,100,time);
+    healthFace.Offer("happy",1,2,time,3); // Repeated victories and late AI cannot mask danger.
+    healthFace.Update(time);healthPlayback.Update(time,true,healthFace.Emotion,healthFace.Weight,healthFace.Blink);
+}
+Check(healthFace.HealthDanger&&healthFace.Emotion=="sad"&&healthFace.Weight>.8f&&healthPlayback.Emotion=="sad","critical HP remains sad beyond speech cooldown/duration despite praise");
+healthFace.ObserveHealth(30,100,10.1);Check(healthFace.HealthDanger,"low HP face uses reset hysteresis rather than flickering at 25 percent");
+healthFace.ObserveHealth(50,100,10.2);Check(!healthFace.HealthDanger,"safe HP releases emergency face priority");
+healthFace.ObserveHealth(100,100,10.3);healthFace.Offer("happy",1,1,10.3);
+for(int frame=1;frame<=60;frame++){var time=10.3+frame/60.0;healthFace.Update(time);healthPlayback.Update(time,true,healthFace.Emotion,healthFace.Weight,0);}
+Check(healthFace.Emotion=="relaxed"&&healthPlayback.Emotion=="relaxed"&&healthPlayback.Weight>.5f,"full recovery relaxes immediately without a minimum heal event or AI priority override");
+healthFace.ObserveHealth(10,100,11.3);healthFace.Update(11.3);healthFace.ObserveHealth(0,0,11.4,false);Check(!healthFace.HealthDanger,"disabled detection releases critical face");
+var spawnFace=new CompanionExpression();spawnFace.ObserveHealth(100,100,0);for(int frame=1;frame<=30;frame++)spawnFace.Update(frame/60.0);Check(spawnFace.Emotion=="neutral","first full HP sample is baseline, not healing");
+spawnFace.ObserveHealth(20,100,1);spawnFace.ObserveHealth(100,100,3);for(int frame=1;frame<=30;frame++)spawnFace.Update(3+frame/60.0);Check(!spawnFace.HealthDanger&&spawnFace.Emotion=="neutral","sample gap never fabricates a full-recovery event");
 for (int selected=56000; selected<FaceSelection.FirstGroup+FaceSelection.StateCount; selected++)
 {
     int visible=0;
