@@ -153,3 +153,10 @@ F9 → `Game output, multiplayer and memory` → 按需选择 `Export hunt conte
 外观候选仅在原170个网格之外追加88个独立轮廓层，原网格、UV、法线、骨架与权重按字节保留；不修改原VRM或贴图。原表情材质的双面兼容块保持不变。F9 → `Appearance` → `Optional model outline` 默认关闭，可在游戏中切换；轮廓跟随41级表情与 `Show head pot`，不会单独露出铁盆轮廓。额外网格增加渲染负担，实际原生阴影及性能仍需实机检查；离线预览不是游戏画面。
 
 脸部采用独立材质暖红倍率，**不是精确饱和度滑条**，影响head材质覆盖区域（包括眼部），不修改身体或服装。提供 `original` 原色、`soft-rosy` 轻度红润、`rosy` 较明显红润。默认候选使用 `soft-rosy`。切换脸部预设需退出游戏，运行 `tools/Install-OptionalAppearance.ps1 -Tint original`（或 `soft-rosy` / `rosy`）再启动；此脚本需本机候选 `dist/OptionalAppearancePreview` 与匹配插件，尚非独立公开发行安装器。恢复本次认可的旧外观：退出游戏运行 `tools/Install-OptionalAppearance.ps1 -Restore`。备份位于 `backups/optional-appearance-preview`；未知的外部改动会拒绝覆盖。脚本不重置私人配置。
+
+
+### 描边实测修订：原生路线研究
+
+玩家实测旧轮廓壳开关没有可见效果，不能将离线预览视为游戏通过。旧开关已标为 `Legacy outline shell (no visible effect confirmed)`，保留对照用途；原VRM的MToon参数不会自动成为MHW材质功能。旧生成器将新增网格绘制相关字段19改为0，这一语义未经原生验证，是候选原因，不是已定位的结论。
+
+新的研究路线为MHW的 `cpModelOutline` / `uOutlineFilter`。公开类型资料仅说明类型存在，没有证明常驻卡通描边可用。新版在首次启动后于后台自动生成一次 `config/research/native-outline-421810-v1.json`；也可 F9 → `Appearance` → `Capture native outline renderer (read only)` 重采。它只在421810版本通过OS保护读取主程序映像，按静态类名、DTI大小、getter指令和虚表关系定位，导出有限代码片段与RVA，不调用未知原生函数、不读取堆对象、不写内存、不增加hook、不读取聊天或密钥。扫描失败仅显示状态，不阻止游戏。该JSON仅供本机研究，不进入Git或发行包。此入口不产生任何新的描边效果；需要加载后的代码进一步确认渲染条件和控制字段。

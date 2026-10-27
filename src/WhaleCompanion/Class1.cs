@@ -202,6 +202,7 @@ public sealed partial class ProbePlugin : IPlugin
 
     public void OnUpdate(float deltaTime)
     {
+        MaybeCaptureNativeOutline();
         if(enabled&&!scenePaused&&weaponStateDiagnostic)
         {
             while(palicoHealthProbe.TryTypeDetail(out var typeDetail))WriteLog("PALICO_TYPE_DIAGNOSTIC "+typeDetail);

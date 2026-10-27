@@ -1,4 +1,4 @@
-﻿using WhaleCompanion;
+using WhaleCompanion;
 try
 {
 int checks=0;
@@ -659,6 +659,25 @@ Check(ChatReadiness.IsActorReady(readyMemory,0x400000),"validated sampled actor 
 Check(!ChatReadiness.IsActorReady(readyMemory,0),"missing sampled actor is never ready");
 readyMemory.Float(0x500064,float.NaN);Check(!ChatReadiness.IsReady(readyMemory,readyModule,"421810"),"invalid player HP keeps game output paused");
 Check(!ChatReadiness.IsReady(readyMemory,readyModule,"unknown")&&!ChatReadiness.IsReady(new MemoryFixture(),readyModule,"421810"),"menus/missing data and unsupported revisions stay paused");
+// Synthetic image only: discover exact DTI, getter and vtable without native calls.
+{
+ const ulong image=0x140000000;
+ var text=new byte[256];var outlineData=new byte[512];
+ System.Text.Encoding.ASCII.GetBytes("cpModelOutline\0").CopyTo(outlineData,0x180);
+ BitConverter.GetBytes(image+0x2000+0x180).CopyTo(outlineData,0x108);
+ BitConverter.GetBytes(0x80/4).CopyTo(outlineData,0x130);
+ text[0x80]=0x48;text[0x81]=0x8D;text[0x82]=5;text[0x87]=0xC3;
+ BitConverter.GetBytes(0x2100-(0x1080+7)).CopyTo(text,0x83);
+ BitConverter.GetBytes(image+0x1020).CopyTo(outlineData,0x40);
+ BitConverter.GetBytes(image+0x1080).CopyTo(outlineData,0x60);
+ var sections=new[]{new OutlineImageSection(0x1000,0x60000000,text),new OutlineImageSection(0x2000,0x40000000,outlineData)};
+ var found=NativeOutlineLocator.Find(image,sections);
+ Check(found.Count==1&&found[0].Name=="cpModelOutline"&&found[0].Size==0x80&&found[0].TableRva==0x2040,"native outline exact metadata discovered");
+ text[0x87]=0x90;Check(NativeOutlineLocator.Find(image,sections).Count==0,"unknown getter shape rejected");text[0x87]=0xC3;
+ BitConverter.GetBytes(0x84/4).CopyTo(outlineData,0x130);Check(NativeOutlineLocator.Find(image,sections).Count==0,"incorrect component size rejected");BitConverter.GetBytes(0x80/4).CopyTo(outlineData,0x130);
+ BitConverter.GetBytes(image+0x2000).CopyTo(outlineData,0x40);Check(NativeOutlineLocator.Find(image,sections).Count==0,"non executable vtable method rejected");
+ Check(NativeOutlineLocator.Find(image,Array.Empty<OutlineImageSection>()).Count==0,"missing image stays unknown");
+}
 Console.WriteLine($"PASS {checks} weapon-state checks; no game/API calls");
 }
 catch(Exception ex){Console.Error.WriteLine("FAIL: "+ex.Message);Environment.ExitCode=1;}
@@ -670,12 +689,3 @@ sealed class MemoryFixture:IReadOnlyLocalMemory
     public bool Pointer(ulong at,out ulong value){Reads++;pointerReads++;var ok=Pointers.TryGetValue(at,out value);if(ChangePointer&&pointerReads>1)value+=8;return ok;}
     public bool Int32(ulong at,out int value){Reads++;return Values.TryGetValue(at,out value);}
 }
-
-
-
-
-
-
-
-
-
