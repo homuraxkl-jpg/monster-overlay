@@ -23,6 +23,7 @@ try
     var currentFriendly=File.ReadAllBytes(text);var friendlyHash=OfflineDialogue.Hash(currentFriendly);
     var friendlyBytes=args[0]=="restore"?File.ReadAllBytes(Path.Combine(directory,"defaults",OfflineLanguage.TextName(language))):currentFriendly;
     var updated=OfflinePlainText.Import(catalog,new UTF8Encoding(false,true).GetString(friendlyBytes));
+    foreach(var line in updated.Entries)if(line.Replacement!=null)line.Replacement=OfflineDialogue.NormalizeScript(line.Replacement,updated.File);
     var result=OfflineDialogue.Build(source,updated);
     if(OfflineLanguage.Read(root)!=language||OfflineDialogue.Hash(File.ReadAllBytes(path))!=hash||OfflineDialogue.Hash(File.ReadAllBytes(text))!=friendlyHash)throw new InvalidDataException("语言或台词在处理过程中被其他程序修改，请保存后再试。");
     var output=Path.Combine(directory,"generated",file);Directory.CreateDirectory(Path.GetDirectoryName(output)!);

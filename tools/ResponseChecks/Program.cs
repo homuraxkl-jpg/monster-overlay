@@ -1,4 +1,4 @@
-using WhaleCompanion;
+﻿using WhaleCompanion;
 using System.Text.Json;
 if(args.Length==2&&args[0]=="--export-public-defaults")
 {
@@ -16,6 +16,9 @@ void Check(bool value,string label){if(!value)throw new Exception(label);checks+
 var dir=Path.Combine(Path.GetTempPath(),"whale-response-check-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(dir);
 try
 {
+    Check(RuntimeResponseText.ApplyEventBoundaries("ls_foresight_damage_verdict_good","LongSword",3,"红刃亮啦！","见切漂亮！")=="见切漂亮！","red refresh cannot become an AI level-up announcement");
+    Check(RuntimeResponseText.ApplyEventBoundaries("ls_foresight_damage_verdict_good","LongSword",3,"见切漂亮！","fallback")=="见切漂亮！","red blade can still receive a counter compliment");
+    Check(RuntimeResponseText.ApplyEventBoundaries("spirit_level_up_3","LongSword",3,"红刃亮啦！","fallback")=="红刃亮啦！","real yellow-to-red promotion remains allowed");
     var policy=new ResponsePolicy();var file=Path.Combine(dir,"responses.json");policy.Load(file);ResponseCatalog.Seed(policy);
     Check(policy.Settings.Events.Count>=150,"per-action prompts exist before triggering");
     foreach(var (id,rule) in policy.Settings.Events){Check(!string.IsNullOrWhiteSpace(rule.Prompt),"every seeded event has wording instructions");Check(policy.Settings.Categories.ContainsKey(rule.Category),"all events have categories");}

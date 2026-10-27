@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using ImGuiNET;
 using SharpPluginLoader.Core;
 using SharpPluginLoader.Core.Entities;
@@ -127,6 +127,14 @@ public sealed partial class ProbePlugin
         if(ImGui.Button(UiLanguage.Text("Clear recent hunt/chat context","清空近期狩猎与聊天上下文","清空近期狩獵與聊天上下文"))){huntContext.Clear();huntLedger.Clear();observedConversation.Clear();peerInput.Clear();chat.UpdateObservationContext("");chat.Cancel();}
         ImGui.TextWrapped($"{SharedChat.Prefix} | hunt observations: {huntContext.Count} | observed chat: {observedConversation.Count}");
         ImGui.TextWrapped(deliveryStatus);if(conversationOptions.Multiplayer)ImGui.TextWrapped(shareStatus);
+        if(ImGui.Button(UiLanguage.Text("Test local game message (no API)","测试本机游戏消息（不调用AI）","測試本機遊戲訊息（不呼叫AI）")))
+        {nativeOutput=true;nativeSceneReady=HasLoadedSave();nativeDialogue.Enqueue("Whale local test: ABC 123",clock.Elapsed.TotalSeconds);}
+        if(conversationOptions.Multiplayer)
+        {
+            if(ImGui.Button(UiLanguage.Text("Check multiplayer sender (read-only)","检查多人发送器（只读）","檢查多人傳送器（唯讀）")))CheckSharedSender();
+            if(ImGui.Button(UiLanguage.Text("Test multiplayer game chat (no API)","测试多人游戏聊天（不调用AI）","測試多人遊戲聊天（不呼叫AI）")))
+            {shareSceneReady=HasLoadedSave();sharedChat.Enqueue("Whale multiplayer test: ABC 123",clock.Elapsed.TotalSeconds);}
+        }
         ImGui.TextWrapped(conversationOptionStatus);
         RenderContextExport();
     }

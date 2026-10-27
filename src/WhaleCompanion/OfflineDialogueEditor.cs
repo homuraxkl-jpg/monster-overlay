@@ -70,21 +70,23 @@ public sealed class OfflineDialogueEditor : IDisposable
         proposal=null;status="已保存JSON并生成GMD候选；退出游戏后运行应用脚本，再重启加载";
     }
     private OfflineCatalog Copy()=>JsonSerializer.Deserialize<OfflineCatalog>(JsonSerializer.Serialize(catalog))!;
-    private void Generate()
+    private int completedBatch,totalBatches;
+    private void Generate(bool all=false)
     {
         if(catalog==null||pending!=null)return;
         try
         {
-            var lines=catalog.Entries.Where(x=>batch.Contains(x.Key)).Select(x=>new OfflineLine{Key=x.Key,Original=x.Original,Index=x.Index}).ToArray();
-            if(lines.Length is <1 or >8)throw new InvalidDataException("每批请选择1至8句");
+            var lines=catalog.Entries.Where(x=>all?x.Replacement!=null:batch.Contains(x.Key)).Select(x=>new OfflineLine{Key=x.Key,Original=x.Original,Index=x.Index}).ToArray();
+            if(lines.Length<1||(!all&&lines.Length>8))throw new InvalidDataException("每批请选择1至8句");
             if(OfflineLanguage.Read(RootPath)!=language)throw new InvalidDataException("目标语言已变更，请重新加载");
             if(Fingerprint(CatalogPath)!=catalogHash)throw new InvalidDataException("目录已被外部修改，请重新加载");
             if((File.Exists(TextPath)?Fingerprint(TextPath):"")!=textHash)throw new InvalidDataException("文本台词已变更，请重新加载");
             var config=ChatConfiguration.Load(CompanionChat.ConfigurationDirectory);
             var style=useChatPersona?config.Persona:persona;
             requestHash=catalogHash;requestTextHash=textHash;proposal=null;cancel?.Dispose();cancel=new();
+            completedBatch=0;totalBatches=(lines.Length+7)/8;
             pending=Request(config.Settings.Model,style,lines,cancel.Token,config.Settings.Endpoint,language);
-            status=$"正在生成{lines.Length}句（1次付费请求，无自动重试）；不发送聊天记忆";
+            status=$"正在生成{lines.Length}句（分批付费请求，无自动重试）；不发送聊天记忆";
         }
         catch(Exception ex){status="未生成："+ex.Message;}
     }
@@ -92,7 +94,14 @@ public sealed class OfflineDialogueEditor : IDisposable
     {
         var bytes=ProtectedData.Unprotect(await File.ReadAllBytesAsync(CompanionChat.SecretPath,token),null,DataProtectionScope.CurrentUser);
         string key;try{key=Encoding.UTF8.GetString(bytes);}finally{CryptographicOperations.ZeroMemory(bytes);}
-        return await OfflineDialogue.Generate(client,key,model,style,lines,token,endpoint,targetLanguage);
+        var result=new Dictionary<string,string>();
+        foreach(var group in lines.Chunk(8))
+        {
+            token.ThrowIfCancellationRequested();var chunk=await OfflineDialogue.Generate(client,key,model,style,group,token,endpoint,targetLanguage);
+            foreach(var pair in chunk)result.Add(pair.Key,OfflineDialogue.NormalizeScript(pair.Value,OfflineLanguage.FileName(targetLanguage)));
+            Interlocked.Increment(ref completedBatch);
+        }
+        return result;
     }
     public void Poll()
     {
@@ -115,7 +124,7 @@ public sealed class OfflineDialogueEditor : IDisposable
         ImGui.TextWrapped("目标语言必须与游戏文本语言一致；此选择不会修改游戏设置。三种语言分别保存。当前文件：玩家自定义/"+OfflineLanguage.TextName(language));
         ImGui.TextWrapped("保存并退出游戏后双击应用修改；离线文本仍需重启加载。");
         if(pending!=null)
-        {if(ImGui.Button(UiLanguage.Text("Cancel offline generation","取消离线生成","取消離線產生")))cancel?.Cancel();return;}
+        {ImGui.TextUnformatted($"AI batches: {Volatile.Read(ref completedBatch)}/{totalBatches}; preview only, no files changed.");if(ImGui.Button(UiLanguage.Text("Cancel offline generation","取消离线生成","取消離線產生")))cancel?.Cancel();return;}
         var languageIndex=language=="chS"?0:language=="chT"?1:2;
         if(ImGui.Combo(UiLanguage.Text("Target text language","原生文本目标语言","原生文字目標語言"),ref languageIndex,new[]{"简体中文 (chS)","繁體中文 (chT)","English (eng)"},3))
         {
@@ -148,6 +157,7 @@ public sealed class OfflineDialogueEditor : IDisposable
         ImGui.SameLine();if(ImGui.Button("Clear AI batch"))batch.Clear();
         ImGui.TextUnformatted($"AI batch: {batch.Count} entries (1-8 per request). Uses encrypted chat key and configured Model.");
         if(ImGui.Button("Generate offline batch (paid API, preview only)"))Generate();
+        if(ImGui.Button(UiLanguage.Text("Rewrite all editable lines with persona (paid API, preview only)","按人设一键改写全部可编辑台词（付费API，仅预览）","依人設一鍵改寫全部可編輯台詞（付費API，僅預覽）")))Generate(true);
         if(proposal!=null)
         {
             foreach(var pair in proposal)ImGui.TextWrapped(pair.Key+": "+pair.Value);

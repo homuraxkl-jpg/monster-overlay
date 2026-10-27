@@ -35,12 +35,13 @@ public sealed class SharedChat
     {
         if(!double.IsFinite(now))return;
         var formatted=Format(text);if(formatted.Length==0)return;
-        while(queue.Count>=4)queue.Dequeue();queue.Enqueue(new(++sequence,formatted,now));
+        queue.Clear();queue.Enqueue(new(++sequence,formatted,now));
     }
     public SharedChatLine? Peek(double now)
     {
-        while(queue.TryPeek(out var item)&&(now<item.Time||now-item.Time>20))queue.Dequeue();
+        while(queue.TryPeek(out var item)&&(now<item.Time||now-item.Time>ResponseTuning.Thresholds.EventFreshnessSeconds))queue.Dequeue();
         return now>=nextAllowed&&queue.TryPeek(out var next)?next:null;
     }
-    public void Submitted(double now){queue.Dequeue();nextAllowed=now+8;}
+    public void Discard(){if(queue.Count>0)queue.Dequeue();}
+    public void Submitted(double now){queue.Dequeue();nextAllowed=now+ResponseTuning.Thresholds.SharedOutputIntervalSeconds;}
 }

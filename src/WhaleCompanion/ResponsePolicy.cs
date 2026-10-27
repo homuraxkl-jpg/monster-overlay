@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 namespace WhaleCompanion;
 
 public sealed class ResponseCategory
@@ -73,6 +73,12 @@ public sealed class ResponsePolicy
 
 public sealed class ResponseThresholds
 {
+    public double EventFreshnessSeconds {get;set;}=3;
+    public double DynamicEventTimeoutSeconds {get;set;}=2.5;
+    public double NativeOutputIntervalSeconds {get;set;}=1;
+    public double SharedOutputIntervalSeconds {get;set;}=2;
+    public double AiReplyQuietSeconds {get;set;}=1.5;
+    public double CombatResultMaxAgeSeconds {get;set;}=2;
     public double LowHealthRatio {get;set;}=.25;
     public double LowHealthResetRatio {get;set;}=.4;
     public double HealthLossRatio {get;set;}=.15;
@@ -96,7 +102,7 @@ public sealed class ResponseThresholds
     {
         bool Ratio(double v)=>double.IsFinite(v)&&v>0&&v<=1;
         bool Time(double v)=>double.IsFinite(v)&&v>=0&&v<=3600;
-        return new[]{LowHealthRatio,LowHealthResetRatio,HealthLossRatio,PlayerHealRatio,PalicoArmRatio,PalicoHealRatio}.All(Ratio)&&LowHealthResetRatio>LowHealthRatio&&new[]{SameActionExtraCooldown,MantleCooldown,HealthLossWindow,PlayerHealWindow,PlayerHealCooldown,PalicoHealWindow,PalicoHealCooldown,BowPowerWindow}.All(Time)&&double.IsFinite(PlayerHealMinimum)&&PlayerHealMinimum>=0&&PlayerHealMinimum<=10000&&EvasionCount is >=1 and <=100&&EvasionWindow is >=1 and <=3600&&BowDualEvasionWindow is >=1 and <=3600&&BowPowerCount is >=1 and <=100;
+        return new[]{EventFreshnessSeconds,DynamicEventTimeoutSeconds,CombatResultMaxAgeSeconds}.All(v=>Time(v)&&v>=.1)&&new[]{NativeOutputIntervalSeconds,SharedOutputIntervalSeconds,AiReplyQuietSeconds}.All(Time)&&new[]{LowHealthRatio,LowHealthResetRatio,HealthLossRatio,PlayerHealRatio,PalicoArmRatio,PalicoHealRatio}.All(Ratio)&&LowHealthResetRatio>LowHealthRatio&&new[]{SameActionExtraCooldown,MantleCooldown,HealthLossWindow,PlayerHealWindow,PlayerHealCooldown,PalicoHealWindow,PalicoHealCooldown,BowPowerWindow}.All(Time)&&double.IsFinite(PlayerHealMinimum)&&PlayerHealMinimum>=0&&PlayerHealMinimum<=10000&&EvasionCount is >=1 and <=100&&EvasionWindow is >=1 and <=3600&&BowDualEvasionWindow is >=1 and <=3600&&BowPowerCount is >=1 and <=100;
     }
 }
 public static class ResponseTuning
@@ -104,4 +110,15 @@ public static class ResponseTuning
     public static ResponseSettings Current {get;set;}=new();
     public static ResponseThresholds Thresholds=>Current.Thresholds;
     public static double Cooldown(string category,double fallback)=>Current.Categories.TryGetValue(category,out var group)?group.CooldownSeconds:fallback;
+}
+
+public static class RuntimeResponseText
+{
+    public static string ApplyEventBoundaries(string id,string weapon,int? level,string proposed,string fallback)
+    {
+        if(weapon!="LongSword"||id.StartsWith("spirit_level_up_",StringComparison.Ordinal))return proposed;
+        // A confirmed hit/counter is not evidence of another gauge promotion; an AI paraphrase cannot override that boundary.
+        if(new[]{"升刃","开刃","開刃","升到","升成","升上"}.Any(proposed.Contains)||level==3&&(proposed.Contains("红刃")||proposed.Contains("紅刃")))return fallback;
+        return proposed;
+    }
 }

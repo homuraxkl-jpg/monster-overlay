@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
@@ -177,7 +177,7 @@ public sealed class CompanionChat : IDisposable
         {
             if(Busy)return false;
             StartCore(prompt);if(!Busy)return false;
-            automatic=true;relevant=isRelevant;automaticCompletion=complete;cancellation?.CancelAfter(TimeSpan.FromSeconds(10));return true;
+            automatic=true;relevant=isRelevant;automaticCompletion=complete;cancellation?.CancelAfter(TimeSpan.FromSeconds(ResponseTuning.Thresholds.DynamicEventTimeoutSeconds));return true;
         }
     }
     public void CancelAutomatic() { lock (gate) CancelAutomaticCore(); }

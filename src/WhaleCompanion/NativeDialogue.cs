@@ -19,16 +19,16 @@ public sealed class NativeDialogue
         if (!double.IsFinite(now)) return;
         var clean = Format(text);
         if (clean.Length == 0) return;
-        while (lines.Count >= 4) lines.Dequeue();
+        lines.Clear();
         lines.Enqueue(new(++sequence, clean, now));
     }
     public NativeLine? Take(double now, bool ready)
     {
         if (!double.IsFinite(now)) { Clear(); return null; }
-        while (lines.TryPeek(out var head) && (now < head.Time || now - head.Time > 8)){lines.Dequeue();ExpiredCount++;}
+        while (lines.TryPeek(out var head) && (now < head.Time || now - head.Time > ResponseTuning.Thresholds.EventFreshnessSeconds)){lines.Dequeue();ExpiredCount++;}
         if (!ready) return null; // Scene transitions explicitly clear; transient HUD absence should not drop replies.
         if (now < nextAllowed || !lines.TryDequeue(out var line)) return null;
-        nextAllowed = now + 1.5;
+        nextAllowed = now + ResponseTuning.Thresholds.NativeOutputIntervalSeconds;
         return line;
     }
     public static string Format(string text)

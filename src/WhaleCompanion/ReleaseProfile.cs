@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 namespace WhaleCompanion;
 public static class ReleaseProfile
 {
@@ -16,5 +16,5 @@ public sealed record LogSettings
         var value=JsonSerializer.Deserialize<LogSettings>(File.ReadAllText(path))??throw new InvalidDataException();
         if(value.MaxBytes is <65536 or >8388608)throw new InvalidDataException();return value;
     }
-    public static bool Keep(string text,bool detailed)=>detailed||text.StartsWith("P11.",StringComparison.Ordinal)||text.StartsWith("FACE_EXECUTOR_READY",StringComparison.Ordinal)||new[]{"FAILED","ERROR","STOPPED","mismatch","invalid"}.Any(word=>text.Contains(word,StringComparison.OrdinalIgnoreCase));
+    public static bool Keep(string text,bool detailed)=>detailed||text.StartsWith("P11.",StringComparison.Ordinal)||text.StartsWith("FACE_EXECUTOR_READY",StringComparison.Ordinal)||text.StartsWith("EVENT_",StringComparison.Ordinal)||text.StartsWith("SHARED_CHAT_",StringComparison.Ordinal)||text.StartsWith("NATIVE_DISPLAY",StringComparison.Ordinal)||text.StartsWith("NATIVE_UTF8_READY",StringComparison.Ordinal)||new[]{"FAILED","ERROR","STOPPED","mismatch","invalid"}.Any(word=>text.Contains(word,StringComparison.OrdinalIgnoreCase));
 }

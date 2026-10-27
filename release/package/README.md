@@ -75,3 +75,16 @@
 退出游戏运行 `Uninstall.cmd`，选择同一游戏exe。会校验并恢复 `WhaleCompanion-backup/P11.5-RC1` 中的原文件；不删除密钥、私人记忆、out或修改过的台词。未知的托管文件改动会停止卸载，避免覆盖别人的修改。请保留安装包和备份目录。
 
 模型原作者：木子恶魔；原作名：蓝色小肥鱼Deepseek。项目维护者已确认获得转换后模型及贴图的公开发布授权（2026-10-27）；本包不包含原始VRM，不代表授权他人提取、改作或单独再分发模型。模型与第三方代码的权利分别保留。项目原创部分未另行授予开源许可证；第三方许可证全文和来源说明随插件附带，不受这句话缩减。
+
+
+## RC1反馈修订：输出、延迟与离线文字
+
+`Game output, multiplayer and memory`提供`Test local game message (no API)`、多人模式下的`Check multiplayer sender (read-only)`和`Test multiplayer game chat (no API)`。本机原生消息与网络玩家聊天是两条路径；网络发送尚须实机确认队友收到，发送失败或忙碌会回退本机，不能把回退当成广播成功。
+
+类别CD：health 12秒、guard 15秒、monster 12秒、weapon 18秒、buff 18秒；evasion/spirit/damage/quest默认0，升刃无CD。类别内共享CD，另有检测器自身阈值和全局安静时间；CD阻止触发，不会把事件排到CD结束再说。AI事件请求超过2.5秒回退当前离线句；事件3秒过期，本机提示间隔1秒、网络提交间隔2秒，仅保留最新一句，不积压多招评价。战斗结果待说超过2秒会丢弃。上述限制不等于所有事件都应该每秒触发；默认类别CD仍由responses.json控制。
+
+太刀非升刃事件不允许AI把见切夸奖改成开刃公告，红刃刷新保持静默；真正黄刃升红刃仍可回应。简繁GMD按目标资源独立生成，生成时规范文字脚本并保留原生图标／名字参数；不混装简体文本进繁体GMD。
+
+`Offline Palico dialogue / persona editor` → `Use current chat persona.md` → `Rewrite all editable lines with persona (paid API, preview only)`可分批改写全部可编辑台词，保留特殊说话者原句。先预览，再点`Save generated batch and build candidate`；退出游戏运行`应用修改.cmd`，重启后加载。一次按钮会顺序产生多次付费请求，可取消，失败不会自动保存，不发送聊天记忆或原始VRM。繁体目标会规范为繁体，简体目标规范为简体。
+
+时序默认值可在`Response categories and fixed lines` → `Output timing (seconds)`调整，也对应`config/responses.json`的Thresholds：EventFreshnessSeconds、DynamicEventTimeoutSeconds、NativeOutputIntervalSeconds、SharedOutputIntervalSeconds、AiReplyQuietSeconds、CombatResultMaxAgeSeconds。调大有效期会容许旧招式评价延后出现。

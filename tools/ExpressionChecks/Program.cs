@@ -1,4 +1,4 @@
-using WhaleCompanion;
+﻿using WhaleCompanion;
 int checks = 0;
 void Check(bool ok, string label) { if (!ok) throw new Exception(label); checks++; }
 var reply = CompanionReply.Parse("{\"text\":\"你好\",\"emotion\":\"happy\",\"intensity\":9}");
@@ -243,15 +243,16 @@ Check(NativeDialogue.Format(" \r\n\0")=="","blank native message ignored");
 Check(NativeDialogue.Format(string.Concat(Enumerable.Repeat("🐋",181))).EnumerateRunes().Count()==180+1+SharedChat.Prefix.EnumerateRunes().Count(),"native truncation preserves Unicode scalars");
 var nativeLines=new NativeDialogue();
 nativeLines.Enqueue("first",0);nativeLines.Enqueue("second",0);
-Check(nativeLines.Take(0,true)!.Text.EndsWith("first"),"native queue ordered");
+Check(nativeLines.Take(0,true)!.Text.EndsWith("second"),"native queue keeps newest observation, not an old backlog");
+nativeLines.Enqueue("third",.1);
 Check(nativeLines.Take(.1,true)==null,"native messages paced");
-Check(nativeLines.Take(1.5,true)!.Text.EndsWith("second"),"second message after spacing");
+Check(nativeLines.Take(1,true)!.Text.EndsWith("third"),"second message after spacing");
 nativeLines.Enqueue("old",2);Check(nativeLines.Take(11,true)==null,"expired native message discarded");
 nativeLines.Enqueue("scene",12);Check(nativeLines.Take(12,false)==null&&nativeLines.Take(13,true)!.Text.EndsWith("scene"),"transient HUD absence retains fresh output");
 nativeLines.Enqueue("reset",14);nativeLines.Clear();Check(nativeLines.Take(15,true)==null,"scene reset clears queue");
 nativeLines.Enqueue("future",20);Check(nativeLines.Take(19,true)==null,"backward time discards queued line");
 for(int i=0;i<6;i++)nativeLines.Enqueue(i.ToString(),30);
-Check(nativeLines.Take(30,true)!.Text.EndsWith("2"),"bounded native queue drops oldest");
+Check(nativeLines.Take(30,true)!.Text.EndsWith("5"),"bounded native queue drops oldest");
 nativeLines.Clear();nativeLines.Enqueue("bad",double.NaN);Check(nativeLines.Take(0,true)==null,"invalid timestamp never queued");
 string? nativeDecoded = null; nint retainedUtf8 = 0; int nativeInvocations = 0;
 NativeMessageInterop.DisplayDelegate nativeStub = (chatPtr, utf8, delay, flags, important) => {
@@ -384,6 +385,11 @@ PeerChatPacket.Parse(PeerChatPacket.Id,1,1,wrongHeader,0,out var headerReason);
 Check(headerReason=="header","session fix does not disable payload header checks");
 PeerChatPacket.Parse(PeerChatPacket.Id,1,1,badUtf8,0,out var utfReason);
 Check(utfReason=="utf8","decode failure distinguishable from missing peer context");
+Check(OfflineDialogue.NormalizeScript("看这边，用这个回复蜜虫！ %s <ICON NOTE>","ot_auto_chT.gmd").StartsWith("看這邊，用這個")&&OfflineDialogue.NormalizeScript("这 %s <ICON NOTE>","ot_auto_chT.gmd")=="這 %s <ICON NOTE>","traditional resource converts script but preserves parameter tokens");
+Check(OfflineDialogue.NormalizeScript("看這邊，用這個回復蜜蟲！","ot_auto_chS.gmd")=="看这边，用这个回复蜜虫！","simplified resource converts independently");
+Check(OfflineDialogue.NormalizeScript("text %s <ICON NOTE>","ot_auto_eng.gmd")=="text %s <ICON NOTE>","English dialogue untouched");
+var latestShared=new SharedChat();latestShared.Enqueue("old",0);latestShared.Enqueue("new",.1);Check(latestShared.Count==1&&latestShared.Peek(.1)!.Text.EndsWith("new"),"shared queue never replays previous move after newer observation");latestShared.Discard();Check(latestShared.Count==0,"local fallback removes line from network queue");
+Check(spiritReplies.Observe(new(3,3),4)==null,"red timer refresh is never another level-up");
 var sharedText=SharedChat.Format("你好\r\n<测试>\0🐋");
 Check(sharedText=="【大肥鱼】你好 ＜测试＞ 🐋","shared final text sanitized and prefixed");
 foreach(var longText in new[]{new string('中',100),string.Concat(Enumerable.Repeat("🐋",100)),new string('a',200)}) {
@@ -392,8 +398,8 @@ foreach(var longText in new[]{new string('中',100),string.Concat(Enumerable.Rep
 }
 Check(SharedChat.Format(" \0\r\n")==""&&SharedChat.IsCompanion("【大肥鱼】你好"),"empty output ignored and echo prefix recognized");
 var shareQueue=new SharedChat();shareQueue.Enqueue("one",0);Check(shareQueue.Peek(0)!=null,"final conversation reply queued");shareQueue.Submitted(0);
-shareQueue.Enqueue("two",1);Check(shareQueue.Peek(7)==null&&shareQueue.Peek(8)!=null,"shared messages paced at 8s");
-shareQueue.Clear();shareQueue.Enqueue("old",0);Check(shareQueue.Peek(21)==null,"old unsent reply expires rather than later broadcast");
+shareQueue.Enqueue("two",1);Check(shareQueue.Peek(1)==null&&shareQueue.Peek(2)!=null,"shared messages paced at 2s");
+shareQueue.Clear();shareQueue.Enqueue("old",0);Check(shareQueue.Peek(3.1)==null,"old unsent reply expires rather than later broadcast");
 ChatMemoryFixture SenderFixture(){var m=new ChatMemoryFixture();m.Data[0x113FD0]=BitConverter.GetBytes((ulong)0x200000);m.Data[0x114748]=BitConverter.GetBytes(4);m.Data[0x202A58]=BitConverter.GetBytes(0);m.Data[0x20325E]=[0];m.Data[0x202A5D]=new byte[128];return m;}
 var senderMemory=SenderFixture();
 Check(GameChatSender.TrySend(senderMemory,0x100000,0x200000,sharedText,out _,true)==ChatSendResult.Submitted&&senderMemory.Writes.Count==0,"read-only sender check never writes");
@@ -515,7 +521,7 @@ var hourResourceCapture=new PalicoResourceCapture();hourResourceCapture.Start(0,
 Check(hourResourceCapture.Active(3599)&&!hourResourceCapture.Active(3600),"resource observation can cover battle window without short startup limit");
 var offlineCatalog=System.Text.Json.JsonSerializer.Deserialize<OfflineCatalog>(File.ReadAllText("D:/homura/codex/MHW/config/dialogue/ot_auto_chT.json"))!;
 var offlineBuilt=OfflineDialogue.Build(traditionalGmdData,offlineCatalog);
-Check(offlineBuilt.SequenceEqual(File.ReadAllBytes("D:/homura/codex/MHW/research/chat/editable-persona-candidate/ot_auto_chT.gmd")),"C# game editor produces byte-identical output to independently tested Python compiler");
+Check(offlineBuilt.SequenceEqual(File.ReadAllBytes("D:/homura/codex/MHW/research/chat/script-normalized-candidate/ot_auto_chT.gmd")),"C# script-normalized editor matches independent Python GMD compiler");
 OfflineCatalog CopyOffline()=>System.Text.Json.JsonSerializer.Deserialize<OfflineCatalog>(System.Text.Json.JsonSerializer.Serialize(offlineCatalog))!;
 var unchangedOffline=CopyOffline();foreach(var row in unchangedOffline.Entries)row.Replacement=null;
 Check(OfflineDialogue.Build(traditionalGmdData,unchangedOffline).SequenceEqual(traditionalGmdData),"C# unmodified GMD roundtrip is byte-identical");
@@ -534,7 +540,7 @@ var defaultOffline=System.Text.Json.JsonSerializer.Deserialize<OfflineCatalog>(F
 var playerText=OfflinePlainText.Export(defaultOffline);
 Check(!playerText.Contains("%s")&&!playerText.Contains("<ICON NOTE>")&&playerText.Contains("〔名字〕")&&playerText.Contains("〔音符〕"),"player TXT hides technical placeholders behind Chinese markers");
 var importedDefault=OfflinePlainText.Import(defaultOffline,playerText);
-Check(OfflineDialogue.Build(traditionalGmdData,importedDefault).SequenceEqual(File.ReadAllBytes("D:/homura/codex/MHW/research/chat/offline-default-pack/ot_auto_chT.gmd")),"human text roundtrip preserves independently generated full default GMD");
+Check(OfflineDialogue.Build(traditionalGmdData,importedDefault).SequenceEqual(File.ReadAllBytes("D:/homura/codex/MHW/research/chat/script-normalized-candidate/default_chT.gmd")),"human text roundtrip preserves independently generated full default GMD");
 Check(OfflineDialogue.Build(traditionalGmdData,OfflinePlainText.Import(unchangedOffline,OfflinePlainText.Export(unchangedOffline))).SequenceEqual(traditionalGmdData),"human TXT roundtrip preserves special original whitespace and source metadata");
 var changedPlayerText=playerText.Replace("听到啦，马上过来！别趁我不在逞强。","收到，来陪你啦！");
 var changedPlayerCatalog=OfflinePlainText.Import(defaultOffline,changedPlayerText);

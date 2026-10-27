@@ -45,6 +45,20 @@ public sealed partial class ProbePlugin
             if(ImGui.InputFloat(UiLanguage.Text("Shared cooldown (seconds)","类别共享冷却（秒）","類別共用冷卻（秒）"),ref cooldown)&&float.IsFinite(cooldown)&&cooldown>=0&&cooldown<=3600){group.CooldownSeconds=cooldown;responses.Save();}
             ImGui.PopID();
         }
+        if(ImGui.TreeNode(UiLanguage.Text("Output timing (seconds)","输出时序（秒）","輸出時序（秒）")))
+        {
+            var timing=responses.Settings.Thresholds;
+            foreach(var item in new (string Name,double Value,Action<double> Set,double Minimum)[]{
+                ("Event freshness",timing.EventFreshnessSeconds,v=>timing.EventFreshnessSeconds=v,.1),
+                ("AI event timeout",timing.DynamicEventTimeoutSeconds,v=>timing.DynamicEventTimeoutSeconds=v,.1),
+                ("Local message interval",timing.NativeOutputIntervalSeconds,v=>timing.NativeOutputIntervalSeconds=v,0),
+                ("Multiplayer send interval",timing.SharedOutputIntervalSeconds,v=>timing.SharedOutputIntervalSeconds=v,0),
+                ("Quiet time after AI reply",timing.AiReplyQuietSeconds,v=>timing.AiReplyQuietSeconds=v,0),
+                ("Combat verdict max age",timing.CombatResultMaxAgeSeconds,v=>timing.CombatResultMaxAgeSeconds=v,.1)})
+            {float value=(float)item.Value;if(ImGui.InputFloat(item.Name,ref value)&&float.IsFinite(value)&&value>=item.Minimum&&value<=3600){item.Set(value);responses.Save();}}
+            ImGui.TextWrapped("Only the newest unsent line is kept. Increasing freshness may allow old-action remarks.");
+            ImGui.TreePop();
+        }
         if(ImGui.Button(UiLanguage.Text("Reload external response settings","重新加载外置回应配置","重新載入外置回應設定"))){responses.Load(Path.Combine(CompanionChat.ConfigurationDirectory,"responses.json"));chat.CancelAutomatic();selectedResponse="";}
         if(ImGui.Button(UiLanguage.Text("Save last lines as offline defaults","把各状态最后一句固定为离线台词","將各狀態最後一句固定為離線台詞"))){responses.FreezeLast();selectedResponse="";}
         ImGui.BeginChild("ResponseEventList",new System.Numerics.Vector2(650,180),(ImGuiChildFlags)0);

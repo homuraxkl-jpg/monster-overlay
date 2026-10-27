@@ -155,7 +155,7 @@ public sealed partial class ProbePlugin : IPlugin
     public void OnLoad()
     {
         try{logSettings=LogSettings.Load(Path.Combine(CompanionChat.ConfigurationDirectory,"logging.json"));}catch{logSettings=new();}
-        WriteLog("P11.5 response interface + native output, multiplayer and observed context 2026-10-27");
+        WriteLog("P11.5 RC1 feedback1: fresh replies, native chat routing and Chinese scripts 2026-10-27");
         try{gameModule=(ulong)(System.Diagnostics.Process.GetCurrentProcess().MainModule?.BaseAddress??0);}catch{gameModule=0;}
         UiLanguage.Load(Path.Combine(CompanionChat.ConfigurationDirectory,"ui-language.txt"));
         responses.Load(Path.Combine(CompanionChat.ConfigurationDirectory,"responses.json"));
@@ -191,7 +191,7 @@ public sealed partial class ProbePlugin : IPlugin
         catch { appearanceStatus = "Invalid appearance.json; default no-pot appearance retained"; }
         face.SetPotVisible(showHeadPot);face.SetOutlineVisible(false);
         face.Initialize(WriteLog);
-        chat.ReplyReceived += reply => { expression.Offer(reply.Emotion, reply.Intensity, 1, clock.Elapsed.TotalSeconds); WriteLog($"FACE_AI emotion={reply.Emotion} intensity={reply.Intensity:0.00}"); lineUntil = clock.Elapsed.TotalSeconds + 8; actionQuietUntil = lineUntil; };
+        chat.ReplyReceived += reply => { expression.Offer(reply.Emotion, reply.Intensity, 1, clock.Elapsed.TotalSeconds); WriteLog($"FACE_AI emotion={reply.Emotion} intensity={reply.Intensity:0.00}"); lineUntil = clock.Elapsed.TotalSeconds + 8; actionQuietUntil = clock.Elapsed.TotalSeconds + ResponseTuning.Thresholds.AiReplyQuietSeconds; };
         chat.ConversationReset += () => { observedConversation.Clear();chat.UpdateObservationContext("");sharedChat.Clear();ClearPeerChat(false); nativeChatEpoch++; nativeInput.Clear(); nativeDialogue.Clear(); nativeDeliveredId=-1; expression.Reset(clock.Elapsed.TotalSeconds); };
         var font = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "msyh.ttc");
         if (File.Exists(font))
@@ -488,7 +488,7 @@ public sealed partial class ProbePlugin : IPlugin
         ChineseText(shareStatus);
         if(shareEnabled)
         {
-            ImGui.TextWrapped("All companion lines. Current game channel; no private whisper. 127 UTF8 bytes including prefix, one message per 8s. Local full replies remain available.");
+            ImGui.TextWrapped("All companion lines. Current game channel; no private whisper. 127 UTF8 bytes including prefix, one message per 2s; newest line only, expires after 3s. Local full replies remain available.");
             if(ImGui.Button("Check shared sender (no send)"))CheckSharedSender();
             if(ImGui.Button("Send shared test (no API)"))sharedChat.Enqueue("大家好，本鱼来陪你们狩猎啦。",clock.Elapsed.TotalSeconds);
             if(ImGui.Button("Resume sharing (in loaded save)")){shareSceneReady=true;sharedChat.Clear();}
@@ -633,6 +633,8 @@ public sealed partial class ProbePlugin : IPlugin
         if (weapon != "LongSword") { spirit.Reset(); spiritStatus = "Unknown: not using long sword"; }
         else if (!SpiritGaugeProbe.TryRead(localMemory, (ulong)player, out var raw, out var readStatus))
         { spirit.Reset(); spiritStatus = readStatus; }
+        else if(!WeaponStateProbe.TryRead(localMemory,(ulong)player,"LongSword",weaponStateRevision,out var checkedGauge,out _)||checkedGauge==null||!checkedGauge.Fields.TryGetValue("spirit_level",out var checkedLevel)||checkedLevel!=raw)
+        {spirit.Reset();spiritStatus="Gauge sources disagree; no level-up response";}
         else
         {
             var change = spirit.Observe((ulong)player, raw, now); spiritStatus = readStatus;
@@ -829,7 +831,7 @@ public sealed partial class ProbePlugin : IPlugin
     {
         var result=pendingSaedResult;if(result==null)return;
         var now=clock.Elapsed.TotalSeconds;
-        if(!saedResponses||!enabled||scenePaused||!autoCompanion||!actionCompanion||weapon!=result.Weapon||now-result.Time>5)
+        if(!saedResponses||!enabled||scenePaused||!autoCompanion||!actionCompanion||weapon!=result.Weapon||now-result.Time>ResponseTuning.Thresholds.CombatResultMaxAgeSeconds)
         {pendingSaedResult=null;return;}
         if(chat.Busy||now<actionQuietUntil)return;
         pendingSaedResult=null;var reaction=CombatDamageDirector.Reaction(result);
@@ -960,13 +962,15 @@ public sealed partial class ProbePlugin : IPlugin
     {
         double now=clock.Elapsed.TotalSeconds;
         if(category is not ("monster" or "damage")&&id!="palico_recovered")RecordHunt(id,facts,now);
+        if(weapon=="LongSword"&&!id.StartsWith("spirit_level_up",StringComparison.Ordinal))facts+=" 当前事件不是已确认的升刃，禁止说开刃、升刃、升到红刃或刃色变高；当前红刃时见切只能续时，不能说再次开红刃。";
         if(!responses.Accept(id,category,fallback,"用当前外置人设说一句简短陪伴。仅评价给定事实，不编造主语、命中、来源或额外成功。",now,out var rule))return;
+        WriteLog($"EVENT_DISPATCH id={id} category={category} dynamic_ai={responses.Settings.DynamicAi}");
         string fixedText=string.IsNullOrWhiteSpace(rule.OfflineText)?fallback:rule.OfflineText;
-        void Deliver(string line){responses.Record(id,line);LocalLine(line);}
+        void Deliver(string line){if(responses.Settings.DynamicAi)line=RuntimeResponseText.ApplyEventBoundaries(id,weapon,spirit.Stable,line,fixedText);WriteLog($"EVENT_DELIVER id={id} age={clock.Elapsed.TotalSeconds-now:0.000}");responses.Record(id,line);LocalLine(line);}
         if(!responses.Settings.DynamicAi){Deliver(fixedText);return;}
         int epoch=session;string currentWeapon=weapon;
         var prompt=$"状态事件键：{id}。外置事件话术要求：{rule.Prompt}\n只读事实与不可跨越的边界：{facts}\n离线措辞参考（可随人设改写）：{fixedText}\n只回复一句角色对白，保持指定JSON回复格式。";
-        if(!chat.StartDynamicEvent(prompt,()=>responses.IsEnabled(id)&&responses.Settings.DynamicAi&&enabled&&!scenePaused&&autoCompanion&&epoch==session&&clock.Elapsed.TotalSeconds-now<=12&&(category!="weapon"&&category!="damage"||weapon==currentWeapon),line=>Deliver(string.IsNullOrWhiteSpace(line)?fixedText:line)))Deliver(fixedText);
+        if(!chat.StartDynamicEvent(prompt,()=>responses.IsEnabled(id)&&responses.Settings.DynamicAi&&enabled&&!scenePaused&&autoCompanion&&epoch==session&&clock.Elapsed.TotalSeconds-now<=ResponseTuning.Thresholds.EventFreshnessSeconds&&(category!="weapon"&&category!="damage"||weapon==currentWeapon),line=>Deliver(string.IsNullOrWhiteSpace(line)?fixedText:line)))Deliver(fixedText);
     }
     private void LocalLine(string text)
     {
@@ -1029,28 +1033,34 @@ public sealed partial class ProbePlugin : IPlugin
     private ChatSendResult SharedSender(string text,bool checkOnly,out string status)
     {
         var gui=SingletonManager.GetSingleton("sMhGUI");
-        var widget=Gui.FindObject("uGUIChat");
-        return GameChatSender.TrySend(chatMemory,(ulong)(gui?.Instance??0),(ulong)(widget?.Instance??0),text,out status,checkOnly);
+        var guiAddress=(ulong)(gui?.Instance??0);
+        // Hidden chat widgets are not necessarily in Gui.ActiveObjects. Resolve the documented root field without GetDti virtual calls.
+        ulong widget=0;if(LocalProcessMemory.IsAddress(guiAddress,0x13FD8)&&chatMemory.Read(guiAddress+0x13FD0,8,out var bytes))widget=BitConverter.ToUInt64(bytes);
+        return GameChatSender.TrySend(chatMemory,guiAddress,widget,text,out status,checkOnly);
     }
     private void CheckSharedSender()
     {
         try {var result=SharedSender("",true,out shareStatus);WriteLog($"SHARED_CHAT_CHECK result={result} status={shareStatus}");}
         catch(Exception ex){shareStatus="发送器检查失败："+ex.GetType().Name;WriteLog("SHARED_CHAT_CHECK_FAILED "+ex.GetType().Name);}
     }
+    private string lastSharedResult="";
+    private double nextSharedResultLog;
     private void ProcessSharedChat()
     {
-        if(!shareEnabled||!shareSceneReady)return;
+        if(!shareEnabled)return;
+        if(!shareSceneReady){if(!HasLoadedSave())return;shareSceneReady=true;nativeSceneReady=true;}
         var now=clock.Elapsed.TotalSeconds;var before=sharedChat.Count;var line=sharedChat.Peek(now);
-        if(sharedChat.Count<before)shareStatus="共享消息等待超过20秒，已取消；本机回复保留";
+        if(sharedChat.Count<before)shareStatus="共享消息超过事件有效期，已丢弃旧句";
         if(line==null)return;
         try
         {
-            if(!HasLoadedSave())return;
+            if(!HasLoadedSave()){shareStatus="Waiting for loaded player; no chat write attempted";return;}
             var result=SharedSender(line.Text,false,out shareStatus);
+            if(shareStatus!=lastSharedResult||now>=nextSharedResultLog){lastSharedResult=shareStatus;nextSharedResultLog=now+10;WriteLog($"SHARED_CHAT_RESULT result={result} status={shareStatus}");}
             if(result==ChatSendResult.Submitted){sharedChat.Submitted(now);WriteLog($"SHARED_CHAT_SUBMITTED id={line.Id} utf8_bytes={System.Text.Encoding.UTF8.GetByteCount(line.Text)}");}
-            else if(result==ChatSendResult.Unavailable){nativeDialogue.Enqueue(line.Text,now);shareEnabled=false;sharedChat.Clear();WriteLog("SHARED_CHAT_STOPPED status="+shareStatus);}
+            else if(result==ChatSendResult.Unavailable||now-line.Time>=1){nativeDialogue.Enqueue(line.Text,now);sharedChat.Discard();deliveryStatus="Network chat unavailable/busy; showing locally; no teammate delivery confirmed";WriteLog("SHARED_CHAT_LOCAL_FALLBACK status="+shareStatus);}
         }
-        catch(Exception ex){nativeDialogue.Enqueue(line.Text,now);shareEnabled=false;sharedChat.Clear();shareStatus="共享已停止："+ex.GetType().Name;WriteLog("SHARED_CHAT_STOPPED "+ex.GetType().Name);}
+        catch(Exception ex){nativeDialogue.Enqueue(line.Text,now);sharedChat.Discard();shareStatus="本句共享失败，已回退本机："+ex.GetType().Name;WriteLog("SHARED_CHAT_STOPPED "+ex.GetType().Name);}
     }
 
     private unsafe void RenderChatStatus()
@@ -1075,7 +1085,7 @@ public sealed partial class ProbePlugin : IPlugin
 
     private void FlushNativeDialogue()
     {
-        if (!nativeOutput||shareEnabled||nativeDialogue.Count==0||clock.Elapsed.TotalSeconds<nextNativeDeliveryPoll) return;
+        if (!nativeOutput||nativeDialogue.Count==0||clock.Elapsed.TotalSeconds<nextNativeDeliveryPoll) return;
         nextNativeDeliveryPoll=clock.Elapsed.TotalSeconds+.1;
         try
         {
