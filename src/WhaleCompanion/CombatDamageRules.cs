@@ -250,9 +250,9 @@ public sealed class CombatDamageDirector
             // Duplicate confirmations must not create another shot or erase valid earlier entries.
             if(double.IsFinite(lastPower)&&current.Time<=lastPower)return false;
             bowOwner=current.Owner;bowEquipment=facts.Equipment?.Object??0;lastPower=current.Time;
-            while(powerShots.Count>0&&current.Time-powerShots.Peek()>8)powerShots.Dequeue();
+            while(powerShots.Count>0&&current.Time-powerShots.Peek()>ResponseTuning.Thresholds.BowPowerWindow)powerShots.Dequeue();
             powerShots.Enqueue(current.Time);
-            if(powerShots.Count<3)return false;
+            if(powerShots.Count<ResponseTuning.Thresholds.BowPowerCount)return false;
             powerShots.Clear();
         }
         if(facts.Owner!=current.Owner||facts.Weapon!=current.Weapon||!double.IsFinite(facts.Time)||current.Time-facts.Time is <0 or >.75)return false;

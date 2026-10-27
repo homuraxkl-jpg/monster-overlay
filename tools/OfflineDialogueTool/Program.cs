@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using WhaleCompanion;
 Console.OutputEncoding=new UTF8Encoding(false);
@@ -18,7 +18,7 @@ try
     if(args[0]=="export")
     {
         if(File.Exists(text))throw new InvalidDataException("文本台词已存在，不会覆盖玩家修改。");
-        OfflineDialogue.AtomicWrite(text,OfflinePlainText.Export(catalog));Console.WriteLine("已导出中文台词文本。");return;
+        OfflineDialogue.AtomicWrite(text,OfflinePlainText.Export(catalog));Console.WriteLine("Exported editable dialogue text.");return;
     }
     var currentFriendly=File.ReadAllBytes(text);var friendlyHash=OfflineDialogue.Hash(currentFriendly);
     var friendlyBytes=args[0]=="restore"?File.ReadAllBytes(Path.Combine(directory,"defaults",OfflineLanguage.TextName(language))):currentFriendly;

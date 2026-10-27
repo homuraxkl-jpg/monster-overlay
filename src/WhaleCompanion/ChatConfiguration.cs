@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -7,6 +7,7 @@ namespace WhaleCompanion;
 public record ChatMessage(string role, string content);
 public sealed record ChatSettings
 {
+    public string Endpoint {get;init;}="https://api.deepseek.com/chat/completions";
     public string Model { get; init; } = "deepseek-flash";
     public string NativeChatModel { get; init; } = "deepseek-flash";
     public bool UseJsonMode { get; init; } = false;
@@ -15,6 +16,7 @@ public sealed record ChatSettings
     public int MaxReplyTokens { get; init; } = 240;
     public void Validate()
     {
+        if(!Uri.TryCreate(Endpoint,UriKind.Absolute,out var endpoint)||endpoint.Scheme is not ("https" or "http")||!string.IsNullOrEmpty(endpoint.UserInfo))throw new InvalidDataException("Invalid API endpoint");
         if (string.IsNullOrWhiteSpace(Model) || Model.Length > 128 || Model.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not ('-' or '_' or '.' or '/' or ':'))) throw new InvalidDataException("Invalid model");
         if (string.IsNullOrWhiteSpace(NativeChatModel) || NativeChatModel.Length > 128 || NativeChatModel.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not ('-' or '_' or '.' or '/' or ':'))) throw new InvalidDataException("Invalid native chat model");
         if (ContextTurns is < 0 or > 50 || MaxContextCharacters is < 2048 or > 64000 || MaxReplyTokens is < 64 or > 1024) throw new InvalidDataException("Invalid context limits");

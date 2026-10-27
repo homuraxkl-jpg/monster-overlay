@@ -1,4 +1,4 @@
-﻿param([switch]$Restore,[string]$GameRoot='',[ValidateSet('chS','chT')][string]$Language='chT')
+﻿param([switch]$Restore,[string]$GameRoot='',[ValidateSet('chS','chT','eng')][string]$Language='chT')
 $ErrorActionPreference='Stop'
 if(!$GameRoot){
  if(Test-Path -LiteralPath (Join-Path $PSScriptRoot 'config\dialogue')){$GameRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\..\..'))}
@@ -9,7 +9,7 @@ if(@(Get-CimInstance Win32_Process -Filter "Name='MonsterHunterWorld.exe'" -Erro
 $config=Join-Path $native 'plugins\CSharp\WhaleCompanion\config\dialogue'
 $file='ot_auto_'+$Language+'.gmd'
 $target=Join-Path $native ('common\text\'+$file)
-$backup=Join-Path $config $(if($Language -eq 'chT'){'backups\applied-p108'}else{'backups\applied-chS'})
+$backup=Join-Path $config $(if($Language -eq 'chT'){'backups\applied-p108'}else{'backups\applied-'+$Language})
 $statePath=Join-Path $backup 'manifest.json'
 $baselineHash='B014B672C6E63802AFC0E31C2DBBD3F2E3B3CD0B2E271848FFAF35EEA9C14B54'
 $state=$null
@@ -29,7 +29,7 @@ if($Restore){
 }
 $source=Join-Path $config ('generated\'+$file)
 $report=Get-Content -LiteralPath (Join-Path $config ('generated\ot_auto_'+$Language+'.validation.json')) -Raw | ConvertFrom-Json
-$sourceHash=if($Language -eq 'chT'){'1167eab1388de4d74534f4563dfdd840f9581c777dbcee245d55aff7b408dc93'}else{'ac40e7e008395c9a30feb89bd50d09a9fda50d3b45d542276463ed6db0a837fd'}
+$sourceHash=if($Language -eq 'chT'){'1167eab1388de4d74534f4563dfdd840f9581c777dbcee245d55aff7b408dc93'}elseif($Language -eq 'eng'){'94cbcbf7b10b2850a6181ef7c1511cd8870093440f06f7e764f9246328415e91'}else{'ac40e7e008395c9a30feb89bd50d09a9fda50d3b45d542276463ed6db0a837fd'}
 if($report.source_file -ne $file -or $report.source_sha256 -ne $sourceHash){throw '台词源文件或语言不匹配。'}
 $newHash=(Get-FileHash -LiteralPath $source).Hash
 if($newHash -ne $report.output_sha256){throw '台词与校验报告不一致，请重新生成。'}

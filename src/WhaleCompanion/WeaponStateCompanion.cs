@@ -38,7 +38,7 @@ public sealed class WeaponStateCompanion
             }
             flags[field]=(value,count,stable);
         }
-        if(result!=null)nextAllowed=now+18;
+        if(result!=null)nextAllowed=now+ResponseTuning.Cooldown("buff",18);
         return result;
     }
 }
@@ -86,7 +86,7 @@ public sealed class HornEffectCompanion
             states[key]=(timer,samples,stable,pending,refresh);
         }
         if(changes.Count==0||now<nextAllowed)return null;
-        nextAllowed=now+18;string labels=string.Join("、",changes.Distinct());
+        nextAllowed=now+ResponseTuning.Cooldown("buff",18);string labels=string.Join("、",changes.Distinct());
         return new(anyRefresh?"horn_effect_refreshed":"horn_effect_active",$"{labels}{(anyRefresh?"续上啦":"生效啦")}，本鱼陪你稳住节奏。","happy",.5f,
             $"玩家身上的旋律效果{labels}计时出现稳定激活或明显续时，已连续三次采样确认。只确认实际增益状态，不从演奏动作或音符队列推断生效；多人时可能来自队友，不宣称主人演奏、指定曲目音符、全队受益或伤害命中。字段映射仍待实机核对。"){RequiredStateFields=changedFields.ToArray()};
     }

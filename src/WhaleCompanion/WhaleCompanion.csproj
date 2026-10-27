@@ -15,6 +15,6 @@
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
   </ItemGroup>
 
-<ItemGroup><AssemblyAttribute Include="System.Runtime.Versioning.SupportedOSPlatformAttribute"><_Parameter1>windows</_Parameter1></AssemblyAttribute></ItemGroup></Project>
+<ItemGroup><AssemblyAttribute Include="System.Runtime.Versioning.SupportedOSPlatformAttribute"><_Parameter1>windows</_Parameter1></AssemblyAttribute></ItemGroup><ItemGroup><EmbeddedResource Include="response-defaults.json" LogicalName="WhaleCompanion.response-defaults.json" /></ItemGroup></Project>
 
 

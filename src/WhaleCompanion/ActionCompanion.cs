@@ -22,13 +22,13 @@ public sealed class ActionCompanion
         // Spin has its own cooldown so a recent power-charge comment does not swallow it.
         if(IncludeAllWeapons&&sample.Weapon=="Hammer"&&sample.Id==95)
         {
-            if(now<nextSpinAllowed)return null;nextSpinAllowed=now+18;
+            if(now<nextSpinAllowed)return null;nextSpinAllowed=now+ResponseTuning.Cooldown("weapon",18);
             return new("hammer_spin","转圈圈，转圈圈！本鱼也要转晕啦！","relaxed",.5f,
                 "玩家已进入大锤回转动作，跟着可爱地说转圈圈，一句就够。不评价命中、伤害或成功失败。");
         }
         if(IncludeAllWeapons&&sample.Weapon=="HuntingHorn"&&sample.Id==74)
         {
-            if(now<nextHornSpinAllowed)return null;nextHornSpinAllowed=now+18;
+            if(now<nextHornSpinAllowed)return null;nextHornSpinAllowed=now+ResponseTuning.Cooldown("weapon",18);
             return new("horn_spin","转呀转，本鱼跟着你的节奏呦！","relaxed",.5f,
                 "已确认进入狩猎笛响音攻击动作，只用转呀转陪伴一句。不评价命中、全段伤害或旋律增益生效；重复段保持安静。");
         }
@@ -38,8 +38,8 @@ public sealed class ActionCompanion
         var kind = extended?.Key??(sample.Id switch { 98 => "special_sheathe", 101 => "iai_slash", 102 => "iai_spirit_slash", 86 => "foresight_slash", _ => null });
         if (kind == null) return null;
         // Repeated callbacks/loops must not become repetitive commentary.
-        if (kind == lastKind && now < nextAllowed + 12) return null;
-        lastKind = kind; nextAllowed = now + (double.IsFinite(CooldownSeconds) ? Math.Clamp(CooldownSeconds, 8, 60) : 18);
+        if (kind == lastKind && now < nextAllowed + ResponseTuning.Thresholds.SameActionExtraCooldown) return null;
+        lastKind = kind; nextAllowed = now + ResponseTuning.Cooldown("weapon",CooldownSeconds);
         var alternate = variant++ % 2 != 0;
         var text = kind switch
         {

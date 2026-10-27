@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using ImGuiNET;
@@ -83,16 +83,16 @@ public sealed class OfflineDialogueEditor : IDisposable
             var config=ChatConfiguration.Load(CompanionChat.ConfigurationDirectory);
             var style=useChatPersona?config.Persona:persona;
             requestHash=catalogHash;requestTextHash=textHash;proposal=null;cancel?.Dispose();cancel=new();
-            pending=Request(config.Settings.Model,style,lines,cancel.Token);
+            pending=Request(config.Settings.Model,style,lines,cancel.Token,config.Settings.Endpoint,language);
             status=$"正在生成{lines.Length}句（1次付费请求，无自动重试）；不发送聊天记忆";
         }
         catch(Exception ex){status="未生成："+ex.Message;}
     }
-    private async Task<Dictionary<string,string>> Request(string model,string style,OfflineLine[] lines,CancellationToken token)
+    private async Task<Dictionary<string,string>> Request(string model,string style,OfflineLine[] lines,CancellationToken token,string endpoint,string targetLanguage)
     {
         var bytes=ProtectedData.Unprotect(await File.ReadAllBytesAsync(CompanionChat.SecretPath,token),null,DataProtectionScope.CurrentUser);
         string key;try{key=Encoding.UTF8.GetString(bytes);}finally{CryptographicOperations.ZeroMemory(bytes);}
-        return await OfflineDialogue.Generate(client,key,model,style,lines,token);
+        return await OfflineDialogue.Generate(client,key,model,style,lines,token,endpoint,targetLanguage);
     }
     public void Poll()
     {
@@ -109,35 +109,35 @@ public sealed class OfflineDialogueEditor : IDisposable
     }
     public void Render()
     {
-        if(!ImGui.CollapsingHeader("Offline Palico dialogue / persona editor"))return;
+        if(!ImGui.CollapsingHeader(UiLanguage.Text("Offline Palico dialogue / persona editor","原生离线台词与人设编辑器","原生離線台詞與人設編輯器")))return;
         if(!loaded)Load();
         ImGui.TextWrapped(status);
-        ImGui.TextWrapped("目标语言必须与游戏文本语言一致；此选择不会修改游戏设置。两种语言分别保存。当前文件：玩家自定义/"+OfflineLanguage.TextName(language));
+        ImGui.TextWrapped("目标语言必须与游戏文本语言一致；此选择不会修改游戏设置。三种语言分别保存。当前文件：玩家自定义/"+OfflineLanguage.TextName(language));
         ImGui.TextWrapped("保存并退出游戏后双击应用修改；离线文本仍需重启加载。");
         if(pending!=null)
-        {if(ImGui.Button("Cancel offline generation"))cancel?.Cancel();return;}
-        var languageIndex=language=="chS"?0:1;
-        if(ImGui.Combo("Target text language",ref languageIndex,new[]{"简体中文 (chS)","繁體中文 (chT)"},2))
+        {if(ImGui.Button(UiLanguage.Text("Cancel offline generation","取消离线生成","取消離線產生")))cancel?.Cancel();return;}
+        var languageIndex=language=="chS"?0:language=="chT"?1:2;
+        if(ImGui.Combo(UiLanguage.Text("Target text language","原生文本目标语言","原生文字目標語言"),ref languageIndex,new[]{"简体中文 (chS)","繁體中文 (chT)","English (eng)"},3))
         {
-            try{OfflineDialogue.AtomicWrite(Path.Combine(PlayerPath,"台词语言.txt"),languageIndex==0?"简体中文":"繁體中文");Load();}
+            try{OfflineDialogue.AtomicWrite(Path.Combine(PlayerPath,"台词语言.txt"),languageIndex==0?"简体中文":languageIndex==1?"繁體中文":"English");Load();}
             catch(Exception ex){status="语言切换失败："+ex.Message;}
         }
-        if(ImGui.Button("Reload offline files"))Load();
+        if(ImGui.Button(UiLanguage.Text("Reload offline files","重新加载离线文件","重新載入離線檔案")))Load();
         if(catalog==null)return;
-        ImGui.Checkbox("Use current chat persona.md",ref useChatPersona);
+        ImGui.Checkbox(UiLanguage.Text("Use current chat persona.md","使用聊天人设persona.md","使用聊天人設persona.md"),ref useChatPersona);
         if(!useChatPersona)
         {
-            ImGui.InputTextMultiline("Offline persona",ref persona,16001,new System.Numerics.Vector2(600,130));
-            if(ImGui.Button("Save offline persona"))
+            ImGui.InputTextMultiline(UiLanguage.Text("Offline persona","独立离线人设","獨立離線人設"),ref persona,16001,new System.Numerics.Vector2(600,130));
+            if(ImGui.Button(UiLanguage.Text("Save offline persona","保存离线人设","儲存離線人設")))
             {try{if(string.IsNullOrWhiteSpace(persona)||persona.Length>16000)throw new InvalidDataException("人设为空或过长");OfflineDialogue.AtomicWrite(PlayerPersonaPath,persona);status="独立离线人设已保存到玩家自定义/离线人设.txt，聊天人设未改";}catch(Exception ex){status=ex.Message;}}
         }
         var previous=selected;
-        ImGui.InputInt("Entry position",ref selected);selected=Math.Clamp(selected,0,catalog.Entries.Count-1);
+        ImGui.InputInt(UiLanguage.Text("Entry position","台词位置","台詞位置"),ref selected);selected=Math.Clamp(selected,0,catalog.Entries.Count-1);
         if(previous!=selected)draft=catalog.Entries[selected].Replacement??"";
         var row=catalog.Entries[selected];
         ImGui.TextWrapped($"{selected+1}/{catalog.Entries.Count} | {row.Key}\n原句：{row.Original}");
-        ImGui.InputTextMultiline("Replacement (manual)",ref draft,1024,new System.Numerics.Vector2(600,80));
-        if(ImGui.Button("Save line and build candidate"))
+        ImGui.InputTextMultiline(UiLanguage.Text("Replacement (manual)","手动替换文本","手動替換文字"),ref draft,1024,new System.Numerics.Vector2(600,80));
+        if(ImGui.Button(UiLanguage.Text("Save line and build candidate","保存此句并生成候选","儲存此句並產生候選")))
         {try{var next=Copy();next.Entries[selected].Replacement=draft;Save(next);}catch(Exception ex){status=ex.Message;}}
         ImGui.SameLine();
         if(ImGui.Button("Restore this original line"))

@@ -1,4 +1,4 @@
-using WhaleCompanion;
+﻿using WhaleCompanion;
 int checks = 0;
 void Check(bool ok, string label) { if (!ok) throw new Exception(label); checks++; }
 var reply = CompanionReply.Parse("{\"text\":\"你好\",\"emotion\":\"happy\",\"intensity\":9}");
@@ -232,7 +232,7 @@ Check(spiritReplies.Observe(new(null,3),0)==null,"red baseline does not praise")
 Check(spiritReplies.Observe(new(3,2),0)==null,"level consumption does not claim helmbreaker hit");
 Check(spiritReplies.Observe(new(2,2),0)==null,"holding gauge is silent");
 Check(spiritReplies.Observe(new(0,1),0) is {Emotion:"happy"},"verified white level-up reacts");
-Check(spiritReplies.Observe(new(1,2),1)==null,"rapid level-up obeys cooldown");
+Check(spiritReplies.Observe(new(1,2),1) is {Emotion:"happy"},"rapid verified level-up has no cooldown");
 Check(spiritReplies.Observe(new(2,3),18)!.Text.Contains("红刃"),"red level-up gets matching line");
 spiritReplies.Reset();Check(spiritReplies.Observe(new(null,3),20)==null,"scene reset baseline silent");
 foreach(var level in new[]{-1,0,4,99}) Check(spiritReplies.Observe(new(0,level),30)==null,"invalid or nonincreasing level silent");

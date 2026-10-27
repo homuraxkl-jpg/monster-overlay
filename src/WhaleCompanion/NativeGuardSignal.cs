@@ -43,10 +43,10 @@ public sealed class NativeGuardCompanion
         if(count>=3&&stable!=active){trigger=stable==false&&active;stable=active;}
         if(pending>=3){trigger=true;pending=0;}
         if(!trigger||now<nextAllowed)return null;
-        var wasRefresh=refresh;refresh=false;nextAllowed=now+15;
-        var text=wasRefresh?"守势又续上啦，本鱼有看见你稳住节奏。":"攻击守势亮了，接得不错嘛，本鱼有在看。";
+        var wasRefresh=refresh;refresh=false;nextAllowed=now+ResponseTuning.Cooldown("guard",15);
+        var text=wasRefresh?"起势续上了，本鱼陪你准备下一招。":"准备接下一招，本鱼看着呢！";
         return new(wasRefresh?"offensive_guard_refresh":"offensive_guard_activated",text,"happy",.6f,
-            $"原生技能结果的实验读取：{sample.Weapon}攻击守势增益{(wasRefresh?"计时出现明显回升并保持":"从未激活变为激活并保持")}。社区字段尚待本机实测。可以只评价攻击守势触发/续上，不知道具体防御动作，不能说确定盾斧GP、完美反击、无伤、反击命中或精确帧数。未读到守势不代表防御失败，未装备技能也可能成功防御。按当前人设简短回应。");
+            $"原生技能结果的实验读取：{sample.Weapon}攻击守势增益{(wasRefresh?"计时出现明显回升并保持":"从未激活变为激活并保持")}。社区字段尚待本机实测。只作为后续动作准备陪伴，不将GP当作本次已确认结果；可提及已观察的攻击守势触发/续上，不知道具体防御动作，不能说确定盾斧GP、完美反击、无伤、反击命中或精确帧数。未读到守势不代表防御失败，未装备技能也可能成功防御。按当前人设简短回应。");
     }
 }
 
@@ -87,7 +87,7 @@ public sealed class NativeEvasionCompanion
         if(pending<3)return null;
         pending=0;
         if(now<nextAllowed)return null;
-        nextAllowed=now+18;
+        nextAllowed=now+ResponseTuning.Thresholds.MantleCooldown;
         return new(refresh?"evasion_mantle_refresh":"evasion_mantle_active",refresh?"回避衣装的劲又续上啦，本鱼给你加油！":"回避衣装亮起来啦，这下本鱼也跟着来劲了！","happy",.6f,
             $"已观察回避衣装专用增伤计时{(refresh?"刷新":"从零激活")}，当前约{value:0.##}秒，连续采样稳定。此字段已在本机太刀翻滚测试看到约20秒刷新及归零。只评价衣装增益触发，不声称特定武器动作已实机验收、无伤、反击命中或衣装外成功闪避。按人设简短回应一次。");
     }

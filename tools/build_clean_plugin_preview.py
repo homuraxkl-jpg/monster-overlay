@@ -12,6 +12,7 @@ SOURCES = {
     "WhaleCompanion.deps.json": "src/WhaleCompanion/bin/Release/net8.0/WhaleCompanion.deps.json",
     "System.Security.Cryptography.ProtectedData.dll": "dist/WhaleCompanion/System.Security.Cryptography.ProtectedData.dll",
     "THIRD-PARTY.md": "THIRD-PARTY.md",
+    "CURRENT-FEATURE-COVERAGE.md": "CURRENT-FEATURE-COVERAGE.md",
     "LICENSE.ProtectedData.txt": "release/third-party/LICENSE.ProtectedData.txt",
     "NOTICE.ProtectedData.txt": "release/third-party/NOTICE.ProtectedData.txt",
     "LICENSE.MonsterOverlay.txt": "LICENSE.MonsterOverlay.txt",
@@ -59,7 +60,8 @@ def build():
     # Generated public defaults, never copied from the development config.
     payload[PREFIX + "examples/settings.json"] = b"{}\n"
     payload[PREFIX + "examples/persona.md"] = "你是陪玩家狩猎的蓝色鲸鱼娘，聪明、嘴硬但在意同伴。用简短中文自然聊天。\n".encode("utf-8")
-    payload["README.md"] = README.encode("utf-8")
+    payload[PREFIX + "examples/response-prompts.json"] = (ROOT / "src/WhaleCompanion/response-defaults.json").read_bytes()
+    payload["README.md"] = (ROOT / "README.md").read_text(encoding="utf-8-sig").replace("](CURRENT-FEATURE-COVERAGE.md)", "]("+PREFIX+"CURRENT-FEATURE-COVERAGE.md)").replace("](THIRD-PARTY.md)", "]("+PREFIX+"THIRD-PARTY.md)").encode("utf-8")
     manifest = {name: hashlib.sha256(data).hexdigest().upper() for name, data in sorted(payload.items())}
     payload["SHA256SUMS.json"] = json.dumps(manifest, ensure_ascii=False, indent=2).encode("utf-8")
     temporary = OUT.with_suffix(".zip.tmp")

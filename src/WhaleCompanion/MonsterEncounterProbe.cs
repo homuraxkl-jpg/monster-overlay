@@ -81,7 +81,7 @@ public sealed class MonsterStateDirector
     public void Add(string kind,double now)
     {
         if(cooldown.TryGetValue(kind,out var until)&&now<until)return;
-        cooldown[kind]=now+12;if(ready.Count>=8)ready.Dequeue();ready.Enqueue(new(kind,now));
+        cooldown[kind]=now+ResponseTuning.Cooldown("monster",12);if(ready.Count>=8)ready.Dequeue();ready.Enqueue(new(kind,now));
     }
     public void Observe(MonsterEncounterSample sample)
     {

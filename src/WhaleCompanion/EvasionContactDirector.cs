@@ -8,7 +8,7 @@ public sealed class EvasionContactDirector
     public int Responses {get;private set;}
     public int Count=>successes.Count;
     public long LastCountedId=>lastCountedId;
-    public static int WindowSeconds(string weapon)=>weapon is "Bow" or "DualBlades"?30:60;
+    public static int WindowSeconds(string weapon)=>weapon is "Bow" or "DualBlades"?ResponseTuning.Thresholds.BowDualEvasionWindow:ResponseTuning.Thresholds.EvasionWindow;
     public void Reset(){Responses=0;owner=0;weapon="";lastNow=double.NaN;lastCountedId=0;successes.Clear();}
     private void Expire(double now){while(successes.TryPeek(out var time)&&now-time>WindowSeconds(weapon))successes.Dequeue();}
     public void Synchronize(ulong player,string currentWeapon,double now)
@@ -35,16 +35,16 @@ public sealed class EvasionContactDirector
         if(value.EvasionId<=lastCountedId)return null;
         lastCountedId=value.EvasionId;
         // While speech is busy, retain at most one ready batch; reset only when actually delivered.
-        if(successes.Count<4)successes.Enqueue(value.Time);
+        if(successes.Count<ResponseTuning.Thresholds.EvasionCount)successes.Enqueue(value.Time);
         return readyToSpeak?TryRespond(player,currentWeapon,now):null;
     }
     public ActionReaction? TryRespond(ulong player,string currentWeapon,double now)
     {
         if(owner!=player||weapon!=currentWeapon||!double.IsFinite(now)||double.IsFinite(lastNow)&&now<lastNow)return null;
-        lastNow=now;Expire(now);if(successes.Count<4)return null;
+        lastNow=now;Expire(now);if(successes.Count<ResponseTuning.Thresholds.EvasionCount)return null;
         successes.Clear();Responses++;
         string text=currentWeapon switch{"Bow"=>"刚才几下躲得真灵活，本鱼都看花眼啦！","DualBlades"=>"刚才几下穿来闪去，本鱼差点跟丢啦！",_=>"刚才几下躲得漂亮，本鱼给你鼓鼓掌！"};
         return new("native_evade_streak",text,"happy",.65f,
-            $"在最近{WindowSeconds(currentWeapon)}秒内记录到4次不同实际回避动作，各有原生具体相交、合法来源和无敌过滤证据，当前批次已清空。只夸刚才这几次躲避，不称连续无失误、整场无伤、完美回避或衣装增益。弓和双刀按30秒，其他武器60秒，无额外冷却；不把接触采样数量当成功次数。按人设简短回应。" );
+            $"在最近{WindowSeconds(currentWeapon)}秒内记录到{ResponseTuning.Thresholds.EvasionCount}次不同实际回避动作，各有原生具体相交、合法来源和无敌过滤证据，当前批次已清空。只夸刚才这几次躲避，不称连续无失误、整场无伤、完美回避或衣装增益。弓和双刀按30秒，其他武器60秒，无额外冷却；不把接触采样数量当成功次数。按人设简短回应。" );
     }
 }

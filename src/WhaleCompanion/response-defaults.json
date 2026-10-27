@@ -1,0 +1,1157 @@
+{
+  "low_health": {
+    "Category": "health",
+    "ReferenceText": "血量不多了，找个空隙缓一缓。",
+    "Prompt": "玩家已低血量。简短关心与提醒，不责备、不编造伤害来源。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "health_loss": {
+    "Category": "health",
+    "ReferenceText": "先稳住节奏，我陪着你。",
+    "Prompt": "HP明显减少。简短关心，不把掉血直接等同怪物命中。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "health_recovered": {
+    "Category": "health",
+    "ReferenceText": "得救啦，状态大健康！",
+    "Prompt": "HP明显恢复。只说状态回升，不带施疗者、道具或主语。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "palico_recovered": {
+    "Category": "health",
+    "ReferenceText": "又充满活力啦！",
+    "Prompt": "猫的HP从较低状态恢复达到阈值。只说恢复状态，不指定治疗来源。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "spirit_level_up_1": {
+    "Category": "spirit",
+    "ReferenceText": "白刃亮啦。",
+    "Prompt": "只确认太刀升到白刃，简短回应，不推断具体招式或命中。不设升刃冷却。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "spirit_level_up_2": {
+    "Category": "spirit",
+    "ReferenceText": "黄刃亮啦。",
+    "Prompt": "只确认太刀升到黄刃，简短回应，不推断具体招式或命中。不设升刃冷却。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "spirit_level_up_3": {
+    "Category": "spirit",
+    "ReferenceText": "红刃亮啦。",
+    "Prompt": "只确认太刀升到红刃，简短回应，不推断具体招式或命中。不设升刃冷却。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "monster_paralysis": {
+    "Category": "monster",
+    "ReferenceText": "麻痹生效啦！",
+    "Prompt": "只说已观察到麻痹，不带造成者，不指定未确认部位，不扩展战果。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "monster_sleep": {
+    "Category": "monster",
+    "ReferenceText": "睡眠生效啦！",
+    "Prompt": "只说已观察到睡眠，不带造成者，不指定未确认部位，不扩展战果。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "monster_stun": {
+    "Category": "monster",
+    "ReferenceText": "击晕生效啦！",
+    "Prompt": "只说已观察到击晕，不带造成者，不指定未确认部位，不扩展战果。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "monster_shock_trap": {
+    "Category": "monster",
+    "ReferenceText": "麻痹陷阱生效啦！",
+    "Prompt": "只说已观察到麻痹陷阱，不带造成者，不指定未确认部位，不扩展战果。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "monster_pitfall_trap": {
+    "Category": "monster",
+    "ReferenceText": "落穴生效啦！",
+    "Prompt": "只说已观察到落穴，不带造成者，不指定未确认部位，不扩展战果。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "monster_wallbang": {
+    "Category": "monster",
+    "ReferenceText": "撞墙生效啦！",
+    "Prompt": "只说已观察到撞墙，不带造成者，不指定未确认部位，不扩展战果。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "monster_tenderize": {
+    "Category": "monster",
+    "ReferenceText": "软化生效啦！",
+    "Prompt": "只说已观察到软化，不带造成者，不指定未确认部位，不扩展战果。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "monster_part_break": {
+    "Category": "monster",
+    "ReferenceText": "部位破坏生效啦！",
+    "Prompt": "只说已观察到部位破坏，不带造成者，不指定未确认部位，不扩展战果。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "monster_mount_started": {
+    "Category": "monster",
+    "ReferenceText": "骑乘开始生效啦！",
+    "Prompt": "只说已观察到骑乘开始，不带造成者，不指定未确认部位，不扩展战果。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "monster_mount_knockdown": {
+    "Category": "monster",
+    "ReferenceText": "骑乘倒地生效啦！",
+    "Prompt": "只说已观察到骑乘倒地，不带造成者，不指定未确认部位，不扩展战果。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "evasion_mantle_active": {
+    "Category": "evasion",
+    "ReferenceText": "回避衣装亮起来啦，这下本鱼也跟着来劲了！",
+    "Prompt": "只确认回避衣装增伤激活，不泛化为衣装外成功。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "evasion_mantle_refresh": {
+    "Category": "evasion",
+    "ReferenceText": "回避衣装的劲又续上啦，本鱼给你加油！",
+    "Prompt": "只确认衣装增伤续时，不编造动作或伤害。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "offensive_guard_activated": {
+    "Category": "guard",
+    "ReferenceText": "准备接下一招，本鱼看着呢！",
+    "Prompt": "只作为后续动作的准备陪伴；守势增益不是具体GP或反击命中证明。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "offensive_guard_refresh": {
+    "Category": "guard",
+    "ReferenceText": "起势续上了，本鱼陪你准备下一招。",
+    "Prompt": "后续准备陪伴，不宣称GP、无伤或反击已成功。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "rolling_output": {
+    "Category": "damage",
+    "ReferenceText": "这一阵打得真起劲，本鱼给你加饭呦！",
+    "Prompt": "简短回应持续输出达到人工参考，不称完整实时面板或真实DPS。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "quest_complete": {
+    "Category": "quest",
+    "ReferenceText": "辛苦啦，任务完成！这次也平安归来了。",
+    "Prompt": "任务完成，简短陪伴，不编造贡献或奖励。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "quest_fail": {
+    "Category": "quest",
+    "ReferenceText": "先歇一歇吧，我陪你准备下一次出发。",
+    "Prompt": "任务失败，温和陪伴，不责备或编造失败原因。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "GreatSword.reload": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入装填准备，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "GreatSword.charge_action": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入蓄力动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "GreatSword.combo_finish": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入终结动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "SwordAndShield.reload": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入装填准备，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "SwordAndShield.guard_start": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入防御架势，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "SwordAndShield.charge_action": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入蓄力动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "SwordAndShield.timed_combo": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入节奏连段，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "DualBlades.reload": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入装填准备，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "DualBlades.combo_finish": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入终结动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "DualBlades.weapon_shot": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入射击动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "LongSword.foresight_slash": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入见切动作陪伴(动态模式结果优先)，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "LongSword.special_sheathe": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入特殊纳刀，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "LongSword.iai_slash": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入小居合衔接，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "LongSword.iai_spirit_slash": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入大居合动作陪伴，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "Hammer.reload": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入装填准备，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "Hammer.hammer_big_bang_finish": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入敲打连段终结，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "Hammer.hammer_charge_3": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入蓄力攻击，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "Hammer.hammer_spin": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入大锤转圈圈，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "Hammer.charge_action": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入蓄力动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "Hammer.hammer_slide_spin": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入滑坡回转攻击，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "Hammer.hammer_power_charge": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入力量蓄力动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "HuntingHorn.reload": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入装填准备，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "HuntingHorn.horn_spin": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入响音攻击，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "Lance.reload": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入装填准备，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "Lance.lance_counter_prepare": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入反击架势准备，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "Lance.charge_action": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入蓄力动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "Lance.guard_start": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入防御架势，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "GunLance.reload": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入装填准备，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "GunLance.weapon_shot": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入射击动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "GunLance.guard_start": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入防御架势，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "SwitchAxe.reload": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入装填准备，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "SwitchAxe.combo_finish": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入终结动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "SwitchAxe.sa_discharge_finish": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入属性解放终结，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "SwitchAxe.sa_zero_discharge": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入零距离解放动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "SwitchAxe.sa_zero_finish": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入零距离解放终结，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "SwitchAxe.sa_axe_prepare": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入斧强化准备，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ChargeBlade.reload": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入装填准备，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ChargeBlade.charge_action": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入蓄力动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ChargeBlade.guard_start": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入防御架势，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ChargeBlade.cb_phial_reload": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入装瓶动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ChargeBlade.cb_shield_charge": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入盾强化动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ChargeBlade.cb_discharge": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入高出力属性解放斩，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ChargeBlade.cb_super_discharge": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入超高出力属性解放斩，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ChargeBlade.cb_axe_charge": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入斧强化衍生动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "InsectGlaive.reload": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入装填准备，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "InsectGlaive.combo_finish": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入终结动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "InsectGlaive.weapon_shot": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入射击动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "Bow.reload": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入装填准备，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "Bow.charge_action": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入蓄力动作，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "HeavyBowgun.reload": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入装填准备，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "HeavyBowgun.scope_prepare": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入会心镜瞄准准备，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "LightBowgun.reload": {
+    "Category": "weapon",
+    "ReferenceText": "这一招出去了，记得留意怪物接下来的动静。",
+    "Prompt": "已进入装填准备，只用一句动作陪伴，不声称命中、完成、增益或反击成功。若是准备/装填，只说准备阶段；转动类可用转圈圈/转呀转。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "cb_saed_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发超解打得好！本鱼看到了！",
+    "Prompt": "只按超解的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "cb_saed_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次超解没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按超解的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "cb_aed_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发高解打得好！本鱼看到了！",
+    "Prompt": "只按高解的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "cb_aed_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次高解没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按高解的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "hammer_big_bang_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发敲打终结打得好！本鱼看到了！",
+    "Prompt": "只按敲打终结的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "hammer_big_bang_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次敲打终结没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按敲打终结的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "hammer_charge3_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发蓄力大地一击打得好！本鱼看到了！",
+    "Prompt": "只按蓄力大地一击的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "hammer_charge3_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次蓄力大地一击没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按蓄力大地一击的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "hammer_charge2_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发蓄力上捞打得好！本鱼看到了！",
+    "Prompt": "只按蓄力上捞的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "hammer_charge2_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次蓄力上捞没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按蓄力上捞的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "sa_zsd_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发零距离解放终结打得好！本鱼看到了！",
+    "Prompt": "只按零距离解放终结的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "sa_zsd_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次零距离解放终结没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按零距离解放终结的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "sa_ed_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发属性解放终结打得好！本鱼看到了！",
+    "Prompt": "只按属性解放终结的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "sa_ed_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次属性解放终结没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按属性解放终结的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ls_foresight_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发见切反击打得好！本鱼看到了！",
+    "Prompt": "只按见切反击的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ls_iai_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发居合拔刀气刃斩打得好！本鱼看到了！",
+    "Prompt": "只按居合拔刀气刃斩的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ls_iai_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次居合拔刀气刃斩没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按居合拔刀气刃斩的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ls_helm_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发登龙打得好！本鱼看到了！",
+    "Prompt": "只按登龙的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ls_helm_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次登龙没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按登龙的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "gs_tcs_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发真蓄力斩（强击）打得好！本鱼看到了！",
+    "Prompt": "只按真蓄力斩（强击）的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "gs_tcs_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次真蓄力斩（强击）没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按真蓄力斩（强击）的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "sns_rush_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发精准突击打得好！本鱼看到了！",
+    "Prompt": "只按精准突击的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "sns_rush_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次精准突击没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按精准突击的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "db_dance_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发鬼人乱舞打得好！本鱼看到了！",
+    "Prompt": "只按鬼人乱舞的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "db_dance_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次鬼人乱舞没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按鬼人乱舞的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "hh_echo_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发响音攻击打得好！本鱼看到了！",
+    "Prompt": "只按响音攻击的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "hh_echo_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次响音攻击没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按响音攻击的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "lance_counter_lance_counter_damage_good": {
+    "Category": "damage",
+    "ReferenceText": "这发反击突刺打得好！本鱼看到了！",
+    "Prompt": "只按反击突刺的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "lance_counter_lance_counter_damage_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次反击突刺没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按反击突刺的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "lance_claw_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发反击飞翔爪打得好！本鱼看到了！",
+    "Prompt": "只按反击飞翔爪的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "lance_claw_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次反击飞翔爪没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按反击飞翔爪的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "gl_burst_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发全弹发射打得好！本鱼看到了！",
+    "Prompt": "只按全弹发射的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "gl_burst_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次全弹发射没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按全弹发射的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "gl_wyvern_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发龙击炮打得好！本鱼看到了！",
+    "Prompt": "只按龙击炮的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "gl_wyvern_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次龙击炮没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按龙击炮的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "gl_stake_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发龙杭炮打得好！本鱼看到了！",
+    "Prompt": "只按龙杭炮的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "gl_stake_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次龙杭炮没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按龙杭炮的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ig_tornado_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发飞圆斩打得好！本鱼看到了！",
+    "Prompt": "只按飞圆斩的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ig_tornado_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次飞圆斩没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按飞圆斩的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ig_dive_ig_dive_damage_good": {
+    "Category": "damage",
+    "ReferenceText": "这发急袭突刺打得好！本鱼看到了！",
+    "Prompt": "只按急袭突刺的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ig_dive_ig_dive_damage_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次急袭突刺没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按急袭突刺的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "bow_power_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发连续刚射阶段打得好！本鱼看到了！",
+    "Prompt": "只按连续刚射阶段的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "bow_power_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次连续刚射阶段没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按连续刚射阶段的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "bow_piercer_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发龙之一矢打得好！本鱼看到了！",
+    "Prompt": "只按龙之一矢的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "bow_piercer_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次龙之一矢没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按龙之一矢的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "bow_thousand_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发龙之千矢打得好！本鱼看到了！",
+    "Prompt": "只按龙之千矢的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "bow_thousand_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次龙之千矢没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按龙之千矢的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "hbg_special_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发狙击龙弹打得好！本鱼看到了！",
+    "Prompt": "只按狙击龙弹的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "hbg_special_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次狙击龙弹没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按狙击龙弹的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "hbg_heart_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发机关龙弹打得好！本鱼看到了！",
+    "Prompt": "只按机关龙弹的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "hbg_heart_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次机关龙弹没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按机关龙弹的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "hbg_melee_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发弩枪近战打得好！本鱼看到了！",
+    "Prompt": "只按弩枪近战的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "hbg_melee_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次弩枪近战没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按弩枪近战的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "lbg_melee_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发弩枪近战打得好！本鱼看到了！",
+    "Prompt": "只按弩枪近战的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "lbg_melee_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次弩枪近战没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按弩枪近战的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_shield_timer_raw": {
+    "Category": "buff",
+    "ReferenceText": "红盾准备起来啦，本鱼有在看着你的节奏。",
+    "Prompt": "只确认红盾实际激活，准备/过渡陪伴，不把一键开关当伤害成绩。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_sword_timer_raw": {
+    "Category": "buff",
+    "ReferenceText": "红剑准备起来啦，本鱼有在看着你的节奏。",
+    "Prompt": "只确认红剑实际激活，准备/过渡陪伴，不把一键开关当伤害成绩。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_axe_timer_raw": {
+    "Category": "buff",
+    "ReferenceText": "斧强化准备起来啦，本鱼有在看着你的节奏。",
+    "Prompt": "只确认斧强化实际激活，准备/过渡陪伴，不把一键开关当伤害成绩。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_full_phials": {
+    "Category": "buff",
+    "ReferenceText": "满瓶准备起来啦，本鱼有在看着你的节奏。",
+    "Prompt": "只确认满瓶实际激活，准备/过渡陪伴，不把一键开关当伤害成绩。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_power_charge": {
+    "Category": "buff",
+    "ReferenceText": "力量蓄力准备起来啦，本鱼有在看着你的节奏。",
+    "Prompt": "只确认力量蓄力实际激活，准备/过渡陪伴，不把一键开关当伤害成绩。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_power_axe": {
+    "Category": "buff",
+    "ReferenceText": "斧强化准备起来啦，本鱼有在看着你的节奏。",
+    "Prompt": "只确认斧强化实际激活，准备/过渡陪伴，不把一键开关当伤害成绩。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_amp_timer_raw": {
+    "Category": "buff",
+    "ReferenceText": "高出力准备起来啦，本鱼有在看着你的节奏。",
+    "Prompt": "只确认高出力实际激活，准备/过渡陪伴，不把一键开关当伤害成绩。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_demon_mode": {
+    "Category": "buff",
+    "ReferenceText": "鬼人化准备起来啦，本鱼有在看着你的节奏。",
+    "Prompt": "只确认鬼人化实际激活，准备/过渡陪伴，不把一键开关当伤害成绩。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_arch_demon_mode": {
+    "Category": "buff",
+    "ReferenceText": "鬼人强化准备起来啦，本鱼有在看着你的节奏。",
+    "Prompt": "只确认鬼人强化实际激活，准备/过渡陪伴，不把一键开关当伤害成绩。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_three_extracts": {
+    "Category": "buff",
+    "ReferenceText": "三灯准备起来啦，本鱼有在看着你的节奏。",
+    "Prompt": "只确认三灯实际激活，准备/过渡陪伴，不把一键开关当伤害成绩。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_item_effect_dash_juice": {
+    "Category": "buff",
+    "ReferenceText": "强走效果生效啦，本鱼陪你接着打。",
+    "Prompt": "只说强走效果实际效果，不推断谁用药、道具消耗或动作完成。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_item_effect_astera_jerky": {
+    "Category": "buff",
+    "ReferenceText": "星辰肉干回复速度效果生效啦，本鱼陪你接着打。",
+    "Prompt": "只说星辰肉干回复速度效果实际效果，不推断谁用药、道具消耗或动作完成。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_item_effect_cool_drink": {
+    "Category": "buff",
+    "ReferenceText": "耐热效果生效啦，本鱼陪你接着打。",
+    "Prompt": "只说耐热效果实际效果，不推断谁用药、道具消耗或动作完成。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_item_effect_hot_drink": {
+    "Category": "buff",
+    "ReferenceText": "耐寒效果生效啦，本鱼陪你接着打。",
+    "Prompt": "只说耐寒效果实际效果，不推断谁用药、道具消耗或动作完成。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_item_effect_health_regen": {
+    "Category": "buff",
+    "ReferenceText": "体力自然回复强化生效啦，本鱼陪你接着打。",
+    "Prompt": "只说体力自然回复强化实际效果，不推断谁用药、道具消耗或动作完成。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_item_effect_might_seed": {
+    "Category": "buff",
+    "ReferenceText": "怪力之种效果生效啦，本鱼陪你接着打。",
+    "Prompt": "只说怪力之种效果实际效果，不推断谁用药、道具消耗或动作完成。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_item_effect_might_pill": {
+    "Category": "buff",
+    "ReferenceText": "怪力药丸效果生效啦，本鱼陪你接着打。",
+    "Prompt": "只说怪力药丸效果实际效果，不推断谁用药、道具消耗或动作完成。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_item_effect_demon_powder": {
+    "Category": "buff",
+    "ReferenceText": "鬼人粉尘效果生效啦，本鱼陪你接着打。",
+    "Prompt": "只说鬼人粉尘效果实际效果，不推断谁用药、道具消耗或动作完成。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_item_effect_hardshell_powder": {
+    "Category": "buff",
+    "ReferenceText": "硬化粉尘效果生效啦，本鱼陪你接着打。",
+    "Prompt": "只说硬化粉尘效果实际效果，不推断谁用药、道具消耗或动作完成。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_item_effect_demondrug": {
+    "Category": "buff",
+    "ReferenceText": "鬼人药效果生效啦，本鱼陪你接着打。",
+    "Prompt": "只说鬼人药效果实际效果，不推断谁用药、道具消耗或动作完成。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_item_effect_mega_demondrug": {
+    "Category": "buff",
+    "ReferenceText": "鬼人药大效果生效啦，本鱼陪你接着打。",
+    "Prompt": "只说鬼人药大效果实际效果，不推断谁用药、道具消耗或动作完成。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_item_effect_armorskin": {
+    "Category": "buff",
+    "ReferenceText": "硬化药效果生效啦，本鱼陪你接着打。",
+    "Prompt": "只说硬化药效果实际效果，不推断谁用药、道具消耗或动作完成。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "weapon_state_item_effect_mega_armorskin": {
+    "Category": "buff",
+    "ReferenceText": "硬化药大效果生效啦，本鱼陪你接着打。",
+    "Prompt": "只说硬化药大效果实际效果，不推断谁用药、道具消耗或动作完成。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "horn_effect_active": {
+    "Category": "buff",
+    "ReferenceText": "旋律增益生效啦，本鱼陪你稳住节奏。",
+    "Prompt": "仅使用本次事实列出的实际旋律效果名称，不指定演奏者，不将排队音符视为生效。续时与新激活按事实区分。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "horn_effect_refreshed": {
+    "Category": "buff",
+    "ReferenceText": "旋律增益生效啦，本鱼陪你稳住节奏。",
+    "Prompt": "仅使用本次事实列出的实际旋律效果名称，不指定演奏者，不将排队音符视为生效。续时与新激活按事实区分。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "native_evade_streak_common": {
+    "Category": "evasion",
+    "ReferenceText": "刚才几下躲得漂亮，本鱼给你鼓鼓掌！",
+    "Prompt": "只夸近期达到计数阈值的几次有效回避，不说整场无伤或连续无失误。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "native_evade_streak_Bow": {
+    "Category": "evasion",
+    "ReferenceText": "刚才几下躲得漂亮，本鱼给你鼓鼓掌！",
+    "Prompt": "只夸近期达到计数阈值的几次有效回避，不说整场无伤或连续无失误。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "native_evade_streak_DualBlades": {
+    "Category": "evasion",
+    "ReferenceText": "刚才几下躲得漂亮，本鱼给你鼓鼓掌！",
+    "Prompt": "只夸近期达到计数阈值的几次有效回避，不说整场无伤或连续无失误。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "gs_tcs_strong_damage_verdict_good": {
+    "Category": "damage",
+    "ReferenceText": "这发真蓄力斩（强击）打得好！本鱼看到了！",
+    "Prompt": "只按真蓄力斩（强击）的已给出两档结果简短夸奖，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "gs_tcs_strong_damage_verdict_bad": {
+    "Category": "damage",
+    "ReferenceText": "这次真蓄力斩（强击）没打够劲，下次本鱼陪你找准机会。",
+    "Prompt": "只按真蓄力斩（强击）的已给出两档结果轻轻提醒下次机会，不编造瓶数、命中率、弱点或无伤。伤害归属仅为候选时不可声称精确归属。",
+    "OfflineText": "",
+    "Enabled": true
+  },
+  "ls_iai_iai_safe_exit_bad": {
+    "Category": "damage",
+    "Enabled": true,
+    "OfflineText": "",
+    "ReferenceText": "这一刀脱身啦，站稳再接下一招。",
+    "Prompt": "只评价本次事实中的动作与结果。安全脱身只是启发式，不声称确定回避成功；搓背只确认完整动作候选，不判断伤害；飞圆仅确认短时衔接，不编造飞圆命中。"
+  },
+  "ig_dive_ig_dive_follow_good": {
+    "Category": "damage",
+    "Enabled": true,
+    "OfflineText": "",
+    "ReferenceText": "下戳打得起劲，接着飞圆，本鱼跟上啦！",
+    "Prompt": "只评价本次事实中的动作与结果。安全脱身只是启发式，不声称确定回避成功；搓背只确认完整动作候选，不判断伤害；飞圆仅确认短时衔接，不编造飞圆命中。"
+  },
+  "ig_dive_ig_dive_follow_bad": {
+    "Category": "damage",
+    "Enabled": true,
+    "OfflineText": "",
+    "ReferenceText": "这次下戳没打够劲，接着飞圆再找机会呦。",
+    "Prompt": "只评价本次事实中的动作与结果。安全脱身只是启发式，不声称确定回避成功；搓背只确认完整动作候选，不判断伤害；飞圆仅确认短时衔接，不编造飞圆命中。"
+  },
+  "db_heavenly_spine_complete_good": {
+    "Category": "damage",
+    "Enabled": true,
+    "OfflineText": "",
+    "ReferenceText": "这一套搓背打出来啦，本鱼给你鼓掌！",
+    "Prompt": "只评价本次事实中的动作与结果。安全脱身只是启发式，不声称确定回避成功；搓背只确认完整动作候选，不判断伤害；飞圆仅确认短时衔接，不编造飞圆命中。"
+  }
+}

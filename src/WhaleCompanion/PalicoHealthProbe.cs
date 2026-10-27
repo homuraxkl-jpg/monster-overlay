@@ -156,18 +156,18 @@ public sealed class PalicoRecoveryDirector
         var before=last;
         if(before!=null&&sample.Time==before.Time)return false;
         last=sample;
-        bool low=sample.Current>0&&sample.Current<sample.Maximum*.75f;
+        bool low=sample.Current>0&&sample.Current<sample.Maximum*(float)ResponseTuning.Thresholds.PalicoArmRatio;
         if(before==null||before.Actor!=sample.Actor||before.Component!=sample.Component||before.Maximum!=sample.Maximum||sample.Time<before.Time||sample.Time-before.Time>15||before.Current<=0||sample.Current<=0)
         {baseline=low?sample.Current:null;recoveryStart=null;return false;}
-        if(sample.Current<before.Current||recoveryStart is {} started&&sample.Time-started>10)
+        if(sample.Current<before.Current||recoveryStart is {} started&&sample.Time-started>ResponseTuning.Thresholds.PalicoHealWindow)
         {baseline=low?sample.Current:null;recoveryStart=null;return false;}
         if(baseline==null){if(low)baseline=sample.Current;return false;}
         if(sample.Current<=before.Current)return false;
         recoveryStart??=sample.Time;
-        if(sample.Current-baseline.Value<sample.Maximum*.25f)return false;
+        if(sample.Current-baseline.Value<sample.Maximum*(float)ResponseTuning.Thresholds.PalicoHealRatio)return false;
         baseline=null;recoveryStart=null;
         if(sample.Time<nextAllowed)return false;
-        nextAllowed=sample.Time+30;return true;
+        nextAllowed=sample.Time+ResponseTuning.Thresholds.PalicoHealCooldown;return true;
     }
 }
 

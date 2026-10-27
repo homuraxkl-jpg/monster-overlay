@@ -42,6 +42,7 @@ public sealed class CompanionChat : IDisposable
     private Task<ChatResult>? pending;
     private CancellationTokenSource? cancellation;
     private bool automatic;
+    private Action<string?>? automaticCompletion;
     private bool pendingNativeDecision;
     public bool CanAcceptNative => !Busy || automatic;
     public event Action<bool, bool>? NativeDecisionMade;
@@ -54,6 +55,8 @@ public sealed class CompanionChat : IDisposable
     public event Action? ConversationReset;
     public string LastLine { get; private set; } = "";
     private string input = "", keyInput = "";
+    private string modelDraft="",endpointDraft="",personaDraft="";
+    private bool editingConnection;
     public string Status { get; private set; } = "Ready";
     public IReadOnlyList<ChatMessage> History => history;
     public bool Busy => pending != null;
@@ -62,29 +65,49 @@ public sealed class CompanionChat : IDisposable
     private void RenderCore()
     {
         ImGui.Separator();
-        ImGui.TextUnformatted($"DeepSeek companion / {configuration.Settings.Model}");
+        ImGui.TextUnformatted($"AI companion / {configuration.Settings.Model}");
         ImGui.TextWrapped($"Config: {ConfigurationDirectory}");
         ImGui.TextUnformatted($"Context: {configuration.Settings.ContextTurns} turns / {configuration.Settings.MaxContextCharacters} characters; replies {configuration.Settings.MaxReplyTokens} tokens");
-        if (ImGui.Button("Reload configuration (clears conversation)")) ReloadConfiguration();
+        if (ImGui.Button(UiLanguage.Text("Reload configuration (clears conversation)","重新加载配置（清空当前对话）","重新載入設定（清空目前對話）"))) ReloadConfiguration();
+        if(ImGui.CollapsingHeader(UiLanguage.Text("AI model and persona","AI模型与人设","AI模型與人設")))
+        {
+            if(!editingConnection){modelDraft=configuration.Settings.Model;endpointDraft=configuration.Settings.Endpoint;personaDraft=configuration.Persona;editingConnection=true;}
+            ImGui.InputText(UiLanguage.Text("Model ID","模型ID","模型ID"),ref modelDraft,256);
+            ImGui.InputText(UiLanguage.Text("Chat completions URL","聊天接口完整URL","聊天介面完整URL"),ref endpointDraft,1024);
+            ImGui.InputTextMultiline(UiLanguage.Text("External persona","外置人设","外置人設"),ref personaDraft,64000,new System.Numerics.Vector2(650,160));
+            if(ImGui.Button(UiLanguage.Text("Save model and persona","保存模型与人设","儲存模型與人設")))
+            {
+                try
+                {
+                    var settings=configuration.Settings with{Model=modelDraft.Trim(),NativeChatModel=modelDraft.Trim(),Endpoint=endpointDraft.Trim()};settings.Validate();
+                    if(string.IsNullOrWhiteSpace(personaDraft)||personaDraft.Length>16000)throw new InvalidDataException();
+                    Directory.CreateDirectory(ConfigurationDirectory);
+                    OfflineDialogue.AtomicWrite(Path.Combine(ConfigurationDirectory,"settings.json"),JsonSerializer.Serialize(settings,new JsonSerializerOptions{WriteIndented=true}));
+                    OfflineDialogue.AtomicWrite(Path.Combine(ConfigurationDirectory,"persona.md"),personaDraft);
+                    ReloadConfiguration();editingConnection=false;
+                }
+                catch {Status="Model/persona not saved: invalid input or write failure";}
+            }
+        }
         RenderMemories();
         ImGui.TextUnformatted("API key is encrypted for the current Windows user.");
-        ImGui.InputText("API key (optional replacement)", ref keyInput, 256, ImGuiInputTextFlags.Password);
-        if (ImGui.Button("Save encrypted key") && !string.IsNullOrWhiteSpace(keyInput))
+        ImGui.InputText(UiLanguage.Text("API key (optional replacement)","API密钥（可替换）","API金鑰（可替換）"), ref keyInput, 256, ImGuiInputTextFlags.Password);
+        if (ImGui.Button(UiLanguage.Text("Save encrypted key","加密保存密钥","加密儲存金鑰")) && !string.IsNullOrWhiteSpace(keyInput))
         {
             try { SaveKey(keyInput); keyInput = ""; Status = "Key saved"; }
             catch { Status = "Could not save encrypted key"; }
         }
         ImGui.TextUnformatted(Status);
         foreach (var message in history) ImGui.TextWrapped($"{message.role}: {message.content}");
-        ImGui.InputText("Message", ref input, 2048);
-        if (ImGui.Button("Send") && (!Busy || automatic) && !string.IsNullOrWhiteSpace(input))
+        ImGui.InputText(UiLanguage.Text("Message","聊天输入","聊天輸入"), ref input, 2048);
+        if (ImGui.Button(UiLanguage.Text("Send","发送","傳送")) && (!Busy || automatic) && !string.IsNullOrWhiteSpace(input))
         {
             if (automatic) Cancel(); Start(input); input = "";
         }
         ImGui.SameLine();
-        if (ImGui.Button("Cancel")) Cancel();
+        if (ImGui.Button(UiLanguage.Text("Cancel","取消","取消"))) Cancel();
         ImGui.SameLine();
-        if (ImGui.Button("New conversation")) Reset();
+        if (ImGui.Button(UiLanguage.Text("New conversation","新对话","新對話"))) Reset();
     }
 
     private void ChangeMemory(Action change, string status)
@@ -94,34 +117,34 @@ public sealed class CompanionChat : IDisposable
     }
     private void RenderMemories()
     {
-        if (!ImGui.CollapsingHeader("Cross-conversation memory")) return;
+        if (!ImGui.CollapsingHeader(UiLanguage.Text("Cross-conversation memory","跨对话记忆","跨對話記憶"))) return;
         if (memories == null) { ImGui.TextWrapped("Memory file unavailable; repair it and reload configuration."); return; }
         bool use = memories.Enabled;
-        if (ImGui.Checkbox("Use saved memories in AI requests", ref use)) ChangeMemory(() => memories.SetEnabled(use), "Memory setting saved");
+        if (ImGui.Checkbox(UiLanguage.Text("Use saved memories in AI requests","AI请求使用已保存记忆","AI請求使用已儲存記憶"), ref use)) ChangeMemory(() => memories.SetEnabled(use), "Memory setting saved");
         ImGui.TextWrapped("Only Save writes a fact. New conversation keeps saved facts. memory.md is a separate manual file.");
         foreach (var entry in memories.Entries)
         {
             ImGui.PushID(entry.Id);
             ImGui.TextWrapped(entry.Text);
             ImGui.TextUnformatted($"{entry.Source} | confirmed={entry.UserConfirmed} | {entry.CreatedUtc.LocalDateTime:g}");
-            if (ImGui.Button("Edit")) { memoryDraft = entry.Text; memoryEditId = entry.Id; memorySource = entry.SourceText; }
+            if (ImGui.Button(UiLanguage.Text("Edit","编辑","編輯"))) { memoryDraft = entry.Text; memoryEditId = entry.Id; memorySource = entry.SourceText; }
             ImGui.SameLine();
-            if (ImGui.Button("Delete")) ChangeMemory(() => memories.Delete(entry.Id), "Memory deleted");
+            if (ImGui.Button(UiLanguage.Text("Delete","删除","刪除"))) ChangeMemory(() => memories.Delete(entry.Id), "Memory deleted");
             ImGui.PopID();
         }
-        if (ImGui.Button("Draft from last user message"))
+        if (ImGui.Button(UiLanguage.Text("Draft from last user message","从最近输入拟定记忆","從最近輸入擬定記憶")))
         {
             var source = history.LastOrDefault(m => m.role == "user")?.content;
             if (source != null) { memorySource = source; memoryDraft = source[..Math.Min(280, source.Length)]; memoryEditId = null; }
             else Status = "No user message to use; enter a fact below";
         }
-        ImGui.InputText("Memory fact (max 280 characters)", ref memoryDraft, 1121);
+        ImGui.InputText(UiLanguage.Text("Memory fact (max 280 characters)","记忆内容（最多280字）","記憶內容（最多280字）"), ref memoryDraft, 1121);
         if (ImGui.Button(memoryEditId == null ? "Save memory" : "Save edited memory"))
             ChangeMemory(() => memories.Save(memoryDraft, memorySource, memoryEditId), "Memory saved");
         ImGui.SameLine();
-        if (ImGui.Button("Discard draft")) { memoryDraft = memorySource = ""; memoryEditId = null; }
-        ImGui.Checkbox("Confirm clearing all saved memories", ref confirmMemoryClear);
-        if (ImGui.Button("Clear saved memories") && confirmMemoryClear) ChangeMemory(memories.Clear, "Saved memories cleared; memory.md retained");
+        if (ImGui.Button(UiLanguage.Text("Discard draft","丢弃草稿","捨棄草稿"))) { memoryDraft = memorySource = ""; memoryEditId = null; }
+        ImGui.Checkbox(UiLanguage.Text("Confirm clearing all saved memories","确认清空已保存记忆","確認清空已儲存記憶"), ref confirmMemoryClear);
+        if (ImGui.Button(UiLanguage.Text("Clear saved memories","清空记忆","清空記憶")) && confirmMemoryClear) ChangeMemory(memories.Clear, "Saved memories cleared; memory.md retained");
     }
 
     public static void SaveKey(string key)
@@ -139,6 +162,15 @@ public sealed class CompanionChat : IDisposable
     {
         if (Busy) return;
         Start(text); automatic = true; relevant = isRelevant;
+    }
+    public bool StartDynamicEvent(string prompt,Func<bool> isRelevant,Action<string?> complete)
+    {
+        lock(gate)
+        {
+            if(Busy)return false;
+            StartCore(prompt);if(!Busy)return false;
+            automatic=true;relevant=isRelevant;automaticCompletion=complete;cancellation?.CancelAfter(TimeSpan.FromSeconds(10));return true;
+        }
     }
     public void CancelAutomatic() { lock (gate) CancelAutomaticCore(); }
     private void CancelAutomaticCore() { if (automatic) Cancel(); }
@@ -158,6 +190,7 @@ public sealed class CompanionChat : IDisposable
         if (Busy || string.IsNullOrWhiteSpace(text)) return;
         cancellation = new CancellationTokenSource();
         var messages = configuration.BuildMessages(history, text, gameContext, memories?.Context() ?? "跨对话记忆不可用。", peerContext:peerContext);
+        messages[0]=new("system",messages[0].content+"\n"+UiLanguage.OutputInstruction);
         var settings = configuration.Settings;
         if(decideNative)
         {
@@ -167,7 +200,7 @@ public sealed class CompanionChat : IDisposable
             NativeStatus="正在判断并生成回复";
         }
         pendingNativeDecision=decideNative;
-        Status = "Waiting for DeepSeek...";
+        Status = "Waiting for model...";
         pending = Request(messages, text, settings, cancellation.Token);
     }
 
@@ -180,9 +213,10 @@ public sealed class CompanionChat : IDisposable
             string key;
             try { key = Encoding.UTF8.GetString(bytes); }
             finally { CryptographicOperations.ZeroMemory(bytes); }
-            using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.deepseek.com/chat/completions");
+            using var request = new HttpRequestMessage(HttpMethod.Post, settings.Endpoint);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
-            var body = new Dictionary<string, object> { ["model"] = settings.Model, ["messages"] = messages, ["thinking"] = new { type = "disabled" }, ["max_tokens"] = settings.MaxReplyTokens, ["stream"] = false };
+            var body = new Dictionary<string, object> { ["model"] = settings.Model, ["messages"] = messages, ["max_tokens"] = settings.MaxReplyTokens, ["stream"] = false };
+            if(new Uri(settings.Endpoint).Host.Equals("api.deepseek.com",StringComparison.OrdinalIgnoreCase))body["thinking"]=new{type="disabled"};
             if (settings.UseJsonMode) body["response_format"] = new { type = "json_object" };
             request.Content = JsonContent.Create(body);
             using var response = await client.SendAsync(request, token).ConfigureAwait(false);
@@ -204,11 +238,12 @@ public sealed class CompanionChat : IDisposable
         pending = null; cancellation?.Dispose(); cancellation = null;
         Status = result.status;
         var wasAutomatic = automatic;
+        var completion=automaticCompletion;automaticCompletion=null;
         var wasNativeDecision = pendingNativeDecision;
         var valid = relevant?.Invoke() ?? true;
         automatic = false; relevant = null; pendingNativeDecision=false;
         if (!valid) { Status = "Stale event reply discarded"; if(wasNativeDecision)NativeStatus="场景或会话改变：已取消旧回复"; return; }
-        if (result.reply == null) { if(wasNativeDecision)NativeStatus="请求未成功："+result.status; return; }
+        if (result.reply == null) { completion?.Invoke(null); if(wasNativeDecision)NativeStatus="请求未成功："+result.status; return; }
         CompanionReply reply;
         if(wasNativeDecision)
         {
@@ -221,7 +256,8 @@ public sealed class CompanionChat : IDisposable
             reply=decision.Reply!;
         }
         else reply = CompanionReply.Parse(result.reply);
-        if (string.IsNullOrWhiteSpace(reply.Text)) { Status = "Invalid structured reply discarded"; return; }
+        if (string.IsNullOrWhiteSpace(reply.Text)) { completion?.Invoke(null); Status = "Invalid structured reply discarded"; return; }
+        if(completion!=null){ReplyReceived?.Invoke(reply);completion(reply.Text);return;}
         LastLine = reply.Text;
         LineReady?.Invoke(reply.Text);
         ReplyReceived?.Invoke(reply);
@@ -236,7 +272,7 @@ public sealed class CompanionChat : IDisposable
     {
         if(pendingNativeDecision)NativeStatus="会话或设置改变：请求已取消";
         cancellation?.Cancel(); cancellation?.Dispose(); cancellation = null;
-        pending = null; automatic = false; relevant = null; pendingNativeDecision=false; Status = "Cancelled";
+        automaticCompletion=null;pending = null; automatic = false; relevant = null; pendingNativeDecision=false; Status = "Cancelled";
     }
     public void Reset() { lock (gate) ResetCore(); }
     private void ResetCore() { Cancel(); history.Clear(); memoryDraft = memorySource = ""; memoryEditId = null; confirmMemoryClear = false; LastLine = ""; ConversationReset?.Invoke(); Status = "New conversation"; }

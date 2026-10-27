@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace WhaleCompanion;
 
@@ -71,8 +71,8 @@ public sealed class SpiritCompanion
     public static string LevelName(int? level) => level switch { 0 => "无刃", 1 => "白刃", 2 => "黄刃", 3 => "红刃", _ => "未知" };
     public ActionReaction? Observe(SpiritChange change, double now)
     {
-        if (!double.IsFinite(now) || now < nextAllowed || change.Previous is not (>= 0 and <= 3) || change.Current is < 1 or > 3 || change.Current <= change.Previous) return null;
-        nextAllowed = now + 18;
+        if (!double.IsFinite(now) || change.Previous is not (>= 0 and <= 3) || change.Current is < 1 or > 3 || change.Current <= change.Previous) return null;
+        nextAllowed = now;
         var alternate = variant++ % 2 != 0;
         var text = change.Current switch
         {

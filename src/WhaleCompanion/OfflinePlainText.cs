@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 
 namespace WhaleCompanion;
@@ -6,26 +6,28 @@ namespace WhaleCompanion;
 // Human-facing format: Chinese headings and ordinary multiline text, no JSON/key edits.
 public static class OfflinePlainText
 {
-    public static string Heading(OfflineLine row)
+    public static string Heading(OfflineLine row,bool english=false)
     {
+        if(english)return $"【Entry {row.Index+1:000}】";
         var group=row.Index<17?"行动与恢复":row.Index<39?"伙伴互动":row.Index<85?"支援道具":row.Index<204?"探索与任务":"随从闲聊";
         return $"【{group} · 第{row.Index+1:000}句】";
     }
-    private static Dictionary<string,string> Markers(OfflineLine row)
+    private static Dictionary<string,string> Markers(OfflineLine row,bool english=false)
     {
         var result=new Dictionary<string,string>();int number=0;
         foreach(var token in OfflineDialogue.FormatTokens(row.Original).Distinct())
-            result.Add(token,token=="%s"?"〔名字〕":token=="<ICON NOTE>"?"〔音符〕":$"〔参数{++number}〕");
+            result.Add(token,token=="%s"?(english?"〔Name〕":"〔名字〕"):token=="<ICON NOTE>"?(english?"〔Note〕":"〔音符〕"):english?$"〔Parameter{++number}〕":$"〔参数{++number}〕");
         return result;
     }
     public static string Export(OfflineCatalog catalog)
     {
-        var text=new StringBuilder("# 只修改标题下方的台词，标题保持不变。可以直接换行。\n# 〔名字〕、〔音符〕等小标记请保留；不需要编写代码。\n# 写（保留原句）可恢复这一句。保存后退出游戏，双击“应用修改”。\n\n");
+        bool english=catalog.File.EndsWith("_eng.gmd",StringComparison.OrdinalIgnoreCase);
+        var text=new StringBuilder(english?"# Edit dialogue below each heading. Keep headings and markers unchanged.\n# Use (keep original) to restore one entry. Exit the game before applying.\n\n":"# 只修改标题下方的台词，标题保持不变。可以直接换行。\n# 〔名字〕、〔音符〕等小标记请保留；不需要编写代码。\n# 写（保留原句）可恢复这一句。保存后退出游戏，双击“应用修改”。\n\n");
         foreach(var row in catalog.Entries)
         {
             var value=row.Replacement??row.Original;
-            foreach(var pair in Markers(row))value=value.Replace(pair.Key,pair.Value,StringComparison.Ordinal);
-            text.AppendLine(Heading(row));text.AppendLine(value.Replace("\r\n","\n"));text.AppendLine();
+            foreach(var pair in Markers(row,english))value=value.Replace(pair.Key,pair.Value,StringComparison.Ordinal);
+            text.AppendLine(Heading(row,english));text.AppendLine(value.Replace("\r\n","\n"));text.AppendLine();
         }
         return text.ToString().Replace("\r\n","\n");
     }
@@ -33,7 +35,8 @@ public static class OfflinePlainText
     {
         if(text.Length>1000000)throw new InvalidDataException("台词文件过大");
         var next=JsonSerializer.Deserialize<OfflineCatalog>(JsonSerializer.Serialize(catalog))!;
-        var headings=next.Entries.ToDictionary(Heading);
+        bool english=catalog.File.EndsWith("_eng.gmd",StringComparison.OrdinalIgnoreCase);
+        var headings=next.Entries.ToDictionary(row=>Heading(row,english));
         var bodies=new Dictionary<string,List<string>>();string? current=null;
         foreach(var line in text.TrimStart('\uFEFF').Replace("\r\n","\n").Split('\n'))
         {
@@ -49,8 +52,8 @@ public static class OfflinePlainText
         foreach(var (heading,row) in headings)
         {
             var value=string.Join("\n",bodies[heading]).Trim();
-            if(value=="（保留原句）"){row.Replacement=null;continue;}
-            foreach(var pair in Markers(row))value=value.Replace(pair.Value,pair.Key,StringComparison.Ordinal);
+            if(value is "（保留原句）" or "(keep original)"){row.Replacement=null;continue;}
+            foreach(var pair in Markers(row,english))value=value.Replace(pair.Value,pair.Key,StringComparison.Ordinal);
             try{OfflineDialogue.ValidateText(row.Original,value);}catch(Exception ex){throw new InvalidDataException(heading+"："+ex.Message+"。请保留名字/音符标记。",ex);}
             // Native source uses CRLF; normalize edited line endings consistently.
             value=value.Replace("\n","\r\n");

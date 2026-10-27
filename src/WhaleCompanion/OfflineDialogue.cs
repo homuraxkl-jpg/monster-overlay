@@ -1,4 +1,4 @@
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
@@ -86,12 +86,14 @@ public static class OfflineDialogue
         }
         if(result.Count!=lines.Count)throw new InvalidDataException("AI遗漏了台词");return result;
     }
-    public static async Task<Dictionary<string,string>> Generate(HttpClient client,string key,string model,string persona,IReadOnlyList<OfflineLine> lines,CancellationToken token)
+    public static async Task<Dictionary<string,string>> Generate(HttpClient client,string key,string model,string persona,IReadOnlyList<OfflineLine> lines,CancellationToken token,string endpoint="https://api.deepseek.com/chat/completions",string language="chS")
     {
         if(lines.Count is <1 or >8||string.IsNullOrWhiteSpace(persona)||persona.Length>16000)throw new InvalidDataException("人设或批次大小无效");
-        using var request=new HttpRequestMessage(HttpMethod.Post,"https://api.deepseek.com/chat/completions");
+        using var request=new HttpRequestMessage(HttpMethod.Post,endpoint);
         request.Headers.Authorization=new AuthenticationHeaderValue("Bearer",key);
-        request.Content=JsonContent.Create(new{model,thinking=new{type="disabled"},max_tokens=2048,stream=false,messages=new[]{new ChatMessage("system",Prompt(persona)),new ChatMessage("user",JsonSerializer.Serialize(lines.Select(x=>new{key=x.Key,original=x.Original})))}});
+        var body=new Dictionary<string,object>{["model"]=model,["max_tokens"]=2048,["stream"]=false,["messages"]=new[]{new ChatMessage("system",Prompt(persona)+(language=="eng"?" Output all replacement dialogue in English.":language=="chT"?" 請使用繁體中文。":" 请使用简体中文。")),new ChatMessage("user",JsonSerializer.Serialize(lines.Select(x=>new{key=x.Key,original=x.Original})))}};
+        if(new Uri(endpoint).Host.Equals("api.deepseek.com",StringComparison.OrdinalIgnoreCase))body["thinking"]=new{type="disabled"};
+        request.Content=JsonContent.Create(body);
         using var response=await client.SendAsync(request,token);if(!response.IsSuccessStatusCode)throw new InvalidOperationException("HTTP "+(int)response.StatusCode);
         using var json=JsonDocument.Parse(await response.Content.ReadAsStringAsync(token));
         var choice=json.RootElement.GetProperty("choices")[0];
