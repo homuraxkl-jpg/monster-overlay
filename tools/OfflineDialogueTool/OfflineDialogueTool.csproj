@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><PlatformTarget>x64</PlatformTarget><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup><Compile Include="../../src/WhaleCompanion/OfflineDialogue.cs" Link="OfflineDialogue.cs" /><Compile Include="../../src/WhaleCompanion/OfflinePlainText.cs" Link="OfflinePlainText.cs" /><Compile Include="../../src/WhaleCompanion/ChatConfiguration.cs" Link="ChatConfiguration.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../src/WhaleCompanion/OfflineLanguage.cs" Link="OfflineLanguage.cs" /></ItemGroup>
+</Project>

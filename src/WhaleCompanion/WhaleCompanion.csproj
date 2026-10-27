@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks><PlatformTarget>x64</PlatformTarget><TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="weapon-actions.tsv" LogicalName="WhaleCompanion.weapon-actions.tsv" />
+    <EmbeddedResource Include="equipment-damage.json" LogicalName="WhaleCompanion.equipment-damage.json" />
+    <EmbeddedResource Include="monster-break-thresholds.json" LogicalName="WhaleCompanion.monster-break-thresholds.json" />
+    <EmbeddedResource Include="motion-values.json" LogicalName="WhaleCompanion.motion-values.json" />
+    <PackageReference Include="SharpPluginLoader.Core" Version="2.0.0" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+  </ItemGroup>
+
+<ItemGroup><AssemblyAttribute Include="System.Runtime.Versioning.SupportedOSPlatformAttribute"><_Parameter1>windows</_Parameter1></AssemblyAttribute></ItemGroup></Project>
+
+
